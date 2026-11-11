@@ -384,8 +384,8 @@ body.locked{overflow:hidden}
   <form id="loginForm" autocomplete="on">
    <div id="loginSplash">בודק התחברות…</div>
    <div id="loginFields">
-    <label for="lu">שם משתמש</label><input id="lu" name="username" autocomplete="username" inputmode="numeric" dir="ltr" style="text-align:right" required>
-    <label for="lp">סיסמה</label><input id="lp" name="password" type="password" autocomplete="current-password" dir="ltr" style="text-align:right" required>
+    <label for="lu">שם משתמש (מספר הטלפון, ספרות בלבד)</label><input id="lu" name="username" autocomplete="username" inputmode="numeric" autocapitalize="off" dir="ltr" style="text-align:right" required>
+    <label for="lp">סיסמה</label><div style="position:relative"><input id="lp" name="password" type="password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" dir="ltr" style="text-align:right;padding-left:74px" required><button type="button" id="lshow" style="position:absolute;left:8px;top:8px;height:36px;border:0;border-radius:10px;background:#eef2f4;color:var(--teal-d);font-weight:700;padding:0 12px">הצג</button></div>
     <div class="err" id="lerr"></div>
     <button class="go" id="lgo" type="submit">כניסה</button>
    </div>
@@ -1079,6 +1079,7 @@ $('#syncBadge').onclick=()=>{if(ST.conflicts.length)openConflicts();else{ST.offl
 const emailOf=u=>String(u||'').replace(/\D/g,'')+'@example.com';
 function showLogin(msg){$('#login').hidden=false;$('#login').classList.remove('checking');document.body.classList.add('locked');$('#lerr').textContent=msg||'';$('#lgo').disabled=false;setTimeout(()=>$('#lu').focus(),100)}
 function enterApp(off){$('#login').hidden=true;document.body.classList.remove('locked');REMOTE=makeRemote();ST.offline=!!off;startRealtime();startTimers();syncNow()}
+$('#lshow').onclick=()=>{const i=$('#lp');const show=i.type==='password';i.type=show?'text':'password';$('#lshow').textContent=show?'הסתר':'הצג'};
 $('#loginForm').addEventListener('submit',async e=>{e.preventDefault();if(!sb){$('#lerr').textContent='אין חיבור – נסו שוב';return}
  $('#lerr').textContent='';$('#lgo').disabled=true;$('#lgo').textContent='נכנס…';
  try{const{error}=await sb.auth.signInWithPassword({email:emailOf($('#lu').value),password:$('#lp').value});
