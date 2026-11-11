@@ -12,7 +12,7 @@ CRM web app for the "מצפה כנרת" project (marketing & management: שפר 
 
 ## Architecture
 - Single-page app, no framework: `src/app.template.html` (HTML + CSS + JS in one file). `npm run build` → `dist/` (inlines logos + config, adds `sw.js`, manifest, icons, `vendor/supabase.js`).
-- Hosting: GitHub Pages, auto-deployed by `.github/workflows/deploy.yml` on every push to `main`.
+- Hosting: GitHub Pages serving the `gh-pages` branch (built site only). Publish with `npm run deploy` (builds and force-pushes `dist/` to `gh-pages`; takes ~1 min to appear). A GitHub Actions workflow (auto-deploy on push) is prepared but not enabled, because the stored GitHub token lacks the `workflow` scope.
 - Backend: Supabase project `kineret-leads` (`herokvahhjgasqosjwuu`, eu-central-1). One table `public.docs` (kind `lead|task|settings`, JSON `data`, `rev`, `seq`, `deleted`). RLS: only e-mails in `public.allowed_users`. Schema in `supabase/migrations/0001_init_docs.sql`.
 - Login: the owner types a username (digits); the app signs in as `<digits>@example.com`. Sign-ups must stay disabled in the dashboard. The password is **never** stored in the repo.
 - **Offline-first**: the app works on a local copy (`localStorage`, keys `crm-kineret-v2`, `crm-kineret-sync-v1`). Service worker caches the app shell. Sync engine (search `ONLINE: login + offline-first sync` in the template): pull by `seq`, push with optimistic concurrency (`rev`), field-level three-way merge, history/labels merged automatically, real clashes → conflict sheet asking the owner. Undo/redo history is local per device and not synced.
@@ -27,6 +27,6 @@ CRM web app for the "מצפה כנרת" project (marketing & management: שפר 
 - Backups go to `../backups` (outside the repo, never committed). Windows scheduled task "Kineret leads daily backup" runs it nightly.
 
 ## Notes for cloud sessions (computer may be off)
-- You can edit `src/` and push to `main`; the site redeploys by itself in ~1–2 minutes.
+- You can edit `src/`, push to `main`, then run `npm run deploy` to publish (the site does NOT redeploy by itself yet).
 - You cannot reach the owner's local files (Excel, backups, `.env.local`). Database schema changes need a new file in `supabase/migrations/` plus applying it on Supabase (tell the owner if you cannot).
 - Test sync logic with an in-memory mock of the `REMOTE` adapter (see how `makeRemote()` is shaped) – never log in with the owner's credentials.

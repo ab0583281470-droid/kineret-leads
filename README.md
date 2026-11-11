@@ -12,7 +12,7 @@ npm ci
 npm run build      # בונה את dist/
 npm run serve      # תצוגה מקומית: http://localhost:5177
 ```
-הקוד כולו ב-`src/app.template.html`. כל דחיפה ל-`main` מעלה גרסה חדשה אוטומטית (GitHub Actions → Pages).
+הקוד כולו ב-`src/app.template.html`. פרסום גרסה חדשה לאתר: `npm run deploy` (בונה ודוחף לענף `gh-pages`; לוקח כדקה).
 
 ## גיבוי יומי
 `npm run backup` שומר את כל הנתונים לקובץ דחוס בתיקיית `../backups` (מחוץ לריפו, 30 האחרונים).
