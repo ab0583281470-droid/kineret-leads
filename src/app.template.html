@@ -908,7 +908,7 @@ td{padding:6px 8px;border-bottom:1px solid #e2e8eb;vertical-align:top}
 tr{page-break-inside:avoid}thead{display:table-header-group}
 td.n{border-inline-start:5px solid var(--c);font-weight:800;font-size:12px}
 td.n small{font-weight:500;color:#66767f}
-.ltr{direction:ltr;unicode-bidi:plaintext;text-align:right;white-space:nowrap}
+.ltr{direction:ltr;unicode-bidi:plaintext;text-align:right;white-space:nowrap}.ltr a.lk:not(.wa):not(.ml){font-size:15px;font-weight:800;letter-spacing:.3px}.ltr a.lk.wa{font-size:13px;font-weight:700}
 .g{color:#66767f}.sm{font-size:10px}
 .ft{margin-top:10px;color:#8a979f;font-size:10px;text-align:center}`;
 const pHead=(title,sub)=>`<div class="band"><img src="${LOGO_S}"><div class="t"><h1>${esc(title)}</h1><small>${esc(sub)}</small></div><img src="${LOGO_K}"></div>`;
@@ -916,7 +916,7 @@ const pPill=n=>{const h=heatObj(n),l=isLight(h.c);return`<span class="p ${l?'lt'
 const listCSS=`.ld{border:1px solid #e2e8eb;border-inline-start:5px solid var(--c);border-radius:8px;padding:7px 10px;margin:6px 0;page-break-inside:avoid;break-inside:avoid}
 .l1{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.nm{font-weight:800;font-size:12.5px}.nm small{font-weight:500;color:#66767f}
 .pl{display:flex;gap:4px;flex-wrap:wrap}.p.sr{background:#eef2f4;color:#44525b}
-.l2{margin:3px 0;font-size:10.5px;direction:ltr;text-align:right}.dv{color:#b8c4ca;margin:0 6px}
+.l2{margin:4px 0;font-size:11px;direction:ltr;text-align:right}.l2 a.lk{border-bottom-width:1.5px}.l2 a.lk:not(.wa):not(.ml){font-size:14.5px;font-weight:800;letter-spacing:.3px}.l2 a.lk.wa{font-size:12.5px;font-weight:700}.dv{color:#b8c4ca;margin:0 6px}
 .l3{margin-top:3px;font-size:11px}.tk{color:#9a5b00}`;
 function exportListPDF(all){
  const arr=all?sorted(DB.leads.slice()):sorted(DB.leads.filter(l=>match(l)));
