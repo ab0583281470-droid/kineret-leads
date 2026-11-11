@@ -540,6 +540,7 @@ function sorted(arr){
  return arr.sort(f)}
 function describeFilters(){const p=[];if(F.q.trim())p.push('חיפוש: '+F.q.trim());GROUPS.forEach(g=>{if(F[g.k].size)p.push(g.label+': '+[...F[g.k]].join(', '))});return p.join(' · ')}
 /* ---------- URL state ---------- */
+let ignoreHashUntil=0;
 const PAGES=['leads','tasks','stats','settings'];
 let page='leads';
 function hashFromState(){let h='#/'+page;if(page==='leads'){const p=new URLSearchParams();if(F.q.trim())p.set('q',F.q.trim());GROUPS.forEach(g=>{if(F[g.k].size)p.set(g.k,[...F[g.k]].join('|'))});const so=$('#sort').value;if(so!=='updated')p.set('sort',so);const qs=p.toString();if(qs)h+='?'+qs}return h}
@@ -555,10 +556,10 @@ function nav(p,push){
  if(push!==false){const was=location.hash;showPage(p);const h=hashFromState();try{if(h!==was)history.pushState({p:1},'',h)}catch(e){}}else showPage(p);
  render();window.scrollTo(0,0)}
 window.addEventListener('popstate',()=>{
- if(ignorePop>0){ignorePop--;return}
+ if(ignorePop>0){ignorePop--;ignoreHashUntil=Date.now()+1500;syncURL();return}
  if(cur){if(isDirty()){try{history.pushState({s:1},'')}catch(e){}askClose()}else{const c=cur;hideVisual();cur=null;onClosed(c)}return}
  applyHash();render()});
-window.addEventListener('hashchange',()=>{if(!cur){applyHash();render()}});
+window.addEventListener('hashchange',()=>{if(!cur&&Date.now()>ignoreHashUntil){applyHash();render()}});
 /* ---------- card ---------- */
 const telHref=l=>l.phone?'tel:+'+intlOf(l.phone):'';
 const waHref=l=>{if(!l.wa)return'';const t=S().waTemplate,fn=String(l.name||'').replace(/^(הר"ר|הרה"ג ר'|הרה"ג|הרב|ר')\s+/,'').split(' ')[0];return'https://wa.me/'+intlOf(l.wa)+(t?'?text='+encodeURIComponent(t.replace(/\{שם\}/g,fn)):'')};
@@ -602,7 +603,7 @@ function renderBadge(){const n=DB.tasks.filter(t=>!t.done&&t.date&&t.date<=today
 const NAV=[['leads','users','לידים'],['tasks','tasks','משימות'],['stats','chart','סיכום'],['settings','gear','הגדרות']];
 function buildNav(){const h=NAV.map(([k,i,t])=>`<button data-nav="${k}" class="${page===k?'on':''}">${ic(i)}<span>${t}</span>${k==='tasks'?'<span class="bdg" hidden></span>':''}</button>`).join('');$('#railNav').innerHTML=h;$('#bnav').innerHTML=h;renderBadge()}
 function goHome(){
- if(cur){hideVisual();const c=cur;cur=null;if(c.pushed){ignorePop++;try{history.back()}catch(e){ignorePop--}}onClosed(c)}
+ if(cur){hideVisual();const c=cur;cur=null;if(c.pushed){ignorePop++;ignoreHashUntil=Date.now()+1500;try{history.back()}catch(e){ignorePop--}}onClosed(c)}
  Object.keys(F).forEach(k=>{if(F[k] instanceof Set)F[k].clear()});F.q='';$('#q').value='';$('#sort').value='updated';
  nav('leads',true);window.scrollTo(0,0)}
 document.addEventListener('click',e=>{if(e.target.closest('[data-home]'))goHome()});
@@ -619,7 +620,7 @@ let cur=null,curLead=null,draft=null,snapStr='',ignorePop=0;
 const isDirty=()=>{if(!cur)return false;if(cur.type==='lead')return !!draft&&jstr(draft)!==snapStr;if(cur.type==='new')return !!NEW&&!!(NEW.name||NEW.phone||NEW.email||NEW.status);return false};
 function hideVisual(){$$('.sheet.on').forEach(s=>s.classList.remove('on'));$('#back').classList.remove('on')}
 function openSheet(id,type){if(cur){hideVisual();onClosed(cur)}let pushed=false;try{history.pushState({s:1},'');pushed=true}catch(e){}$('#'+id).classList.add('on');$('#back').classList.add('on');cur={id,type,pushed}}
-function closeSheet(){if(!cur)return;const c=cur;hideVisual();cur=null;if(c.pushed){ignorePop++;try{history.back()}catch(e){ignorePop--}}onClosed(c)}
+function closeSheet(){if(!cur)return;const c=cur;hideVisual();cur=null;if(c.pushed){ignorePop++;ignoreHashUntil=Date.now()+1500;try{history.back()}catch(e){ignorePop--}}onClosed(c)}
 function requestClose(){if(!cur)return;if(isDirty()){askClose();return}closeSheet()}
 function onClosed(c){if(c.type==='lead'){curLead=null;draft=null}if(c.type==='new')NEW=null;render();setTimeout(maybeConflicts,400)}
 $('#back').onclick=requestClose;
