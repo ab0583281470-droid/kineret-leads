@@ -1,0 +1,16 @@
+{
+  "name": "kineret-leads",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CRM לידים - מצפה כנרת (שפר נדל\"ן)",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "serve": "node scripts/serve.mjs",
+    "backup": "node scripts/backup.mjs",
+    "restore": "node scripts/restore.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.0"
+  }
+}
