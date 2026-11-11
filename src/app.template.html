@@ -333,6 +333,12 @@ body.locked{overflow:hidden}
 .opt.srv.on{border-color:var(--gold);background:var(--gold-soft);box-shadow:0 0 0 2px rgba(197,154,62,.3)}
 @media(max-width:560px){.gbtn.sy .sytx{max-width:110px;overflow:hidden;text-overflow:ellipsis}}
 @media(max-width:420px){.cfo{grid-template-columns:1fr}}
+.pdftx{display:none}
+.shell{overflow-x:clip}
+.tools{flex-wrap:wrap;row-gap:6px}
+@media(max-width:560px){.tools [data-redo]{display:none}.tools .gbtn{min-width:34px;padding:0 7px}.tools select{max-width:104px;padding:0 4px}.gbtn.sy .sytx{display:none}.gbtn.sy.conflict .sytx{display:inline}}
+.syn{display:none;font-size:12px}@media(max-width:560px){.syn{display:inline}}
+@media(min-width:1000px){.pdftx{display:inline}}
 </style>
 </head>
 <body>
@@ -624,9 +630,9 @@ document.addEventListener('keydown',e=>{
 document.addEventListener('click',e=>{if(e.target.closest('[data-close]'))requestClose()});
 /* swipe down to close (touch devices) */
 function enableSwipe(sheet){
- const body=sheet.querySelector('.sh-body');let y0=0,dy=0,st=0,t0=0;
- sheet.addEventListener('touchstart',e=>{if(innerWidth>=1000){st=0;return}const inHead=!!e.target.closest('.sh-head');if(!inHead&&body.scrollTop>0){st=0;return}y0=e.touches[0].clientY;dy=0;st=1;t0=Date.now()},{passive:true});
- sheet.addEventListener('touchmove',e=>{if(!st)return;dy=e.touches[0].clientY-y0;if(st===1){if(dy>10){st=2;sheet.style.transition='none'}else if(dy<-6){st=0;return}}if(st===2){e.preventDefault();sheet.style.transform='translate(-50%,'+Math.max(0,dy)+'px)'}},{passive:false});
+ const body=sheet.querySelector('.sh-body');let x0=0,y0=0,dy=0,st=0,t0=0;
+ sheet.addEventListener('touchstart',e=>{if(innerWidth>=1000){st=0;return}const inHead=!!e.target.closest('.sh-head');if(!inHead&&body.scrollTop>0){st=0;return}x0=e.touches[0].clientX;y0=e.touches[0].clientY;dy=0;st=1;t0=Date.now()},{passive:true});
+ sheet.addEventListener('touchmove',e=>{if(!st)return;dy=e.touches[0].clientY-y0;if(st===1){const dx=Math.abs(e.touches[0].clientX-x0);if(dy>26&&dy>dx*2){st=2;sheet.style.transition='none'}else if(dy<-8||dx>14){st=0;return}}if(st===2){e.preventDefault();sheet.style.transform='translate(-50%,'+Math.max(0,dy)+'px)'}},{passive:false});
  sheet.addEventListener('touchend',()=>{if(st!==2){st=0;return}st=0;const fast=dy>60&&Date.now()-t0<260;sheet.style.transition='';
   if(dy>110||fast){if(isDirty()){sheet.style.transform='';askClose()}else{sheet.style.transform='translate(-50%,104%)';requestClose();setTimeout(()=>{sheet.style.transform=''},350)}}else sheet.style.transform=''},{passive:true})}
 ['shFilter','shLead','shNew','shConf'].forEach(id=>enableSwipe($('#'+id)));
@@ -1034,7 +1040,7 @@ function refreshStatus(){
  renderSyncBadge()}
 function renderSyncBadge(){const b=$('#syncBadge');if(!b)return;
  const map={ok:['cloud','מסונכרן'],pending:['cloud','ממתין ('+ST.pending+')'],offline:['cloudoff','לא מקוון'+(ST.pending?' · '+ST.pending+' ממתינים':'')],conflict:['warn','התנגשות – לחץ לפתרון'],syncing:['refresh','מסנכרן…']};
- const m=map[ST.state];b.className='gbtn sy '+ST.state;b.innerHTML=ic(m[0],16)+'<span class="sytx">'+m[1]+'</span>';b.title=ST.err?'שגיאה: '+ST.err:'לחץ לסנכרון עכשיו'}
+ const m=map[ST.state];b.className='gbtn sy '+ST.state;b.innerHTML=ic(m[0],16)+'<span class="sytx">'+m[1]+'</span>'+((ST.state==='pending'||ST.state==='offline')&&ST.pending?'<b class="syn">'+ST.pending+'</b>':'');b.title=ST.err?'שגיאה: '+ST.err:'לחץ לסנכרון עכשיו'}
 /* ---- real backend adapter (Supabase) ---- */
 function wrapErr(error){const e=new Error(error.message||'שגיאה');e.code=error.code;e.status=error.status;e.net=!error.code&&!error.status&&/fetch|network|load failed/i.test(error.message||'');return e}
 function makeRemote(){return{
@@ -1116,7 +1122,7 @@ function registerSW(){if('serviceWorker' in navigator&&/^https?:/.test(location.
 
 /* ---------- init ---------- */
 function injectIcons(){$('#icSearch').outerHTML=ic('search');$('#qclr').innerHTML=ic('x',16);$('#icFilter').outerHTML=ic('sliders');$('#fab').innerHTML=ic('plus',28);$('#btnNew').innerHTML=ic('plus',16)+' ליד חדש';['icClose1','icClose2','icClose3'].forEach(i=>$('#'+i).innerHTML=ic('x',18));$('#dPdf').innerHTML=ic('file',18);
- $('[data-undo]').innerHTML=ic('undo');$('[data-redo]').innerHTML=ic('redo');$('#btnPdf').innerHTML=ic('file')+' PDF'}
+ $('[data-undo]').innerHTML=ic('undo');$('[data-redo]').innerHTML=ic('redo');$('#btnPdf').innerHTML=ic('file')+'<span class="pdftx"> PDF</span>'}
 injectIcons();load();buildNav();applyHash();render();boot();registerSW();
 </script>
 </body>
