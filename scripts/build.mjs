@@ -1,11 +1,12 @@
-// Builds the static site into ./dist  (run: npm run build)
+// Builds the static site into ./docs  (run: npm run build). GitHub Pages serves main:/docs,
+// so the built files are committed together with every source change.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const src = (...p) => path.join(root, 'src', ...p);
-const dist = (...p) => path.join(root, 'dist', ...p);
+const dist = (...p) => path.join(root, 'docs', ...p);
 const cfg = JSON.parse(fs.readFileSync(src('config.json'), 'utf8'));
 const b64 = (f) => 'data:image/png;base64,' + fs.readFileSync(src('assets', f)).toString('base64');
 const build = Date.now().toString(36);
@@ -28,4 +29,4 @@ fs.copyFileSync(src('manifest.webmanifest'), dist('manifest.webmanifest'));
 for (const f of fs.readdirSync(src('assets', 'icons'))) fs.copyFileSync(src('assets', 'icons', f), dist('icons', f));
 fs.copyFileSync(path.join(root, 'node_modules', '@supabase', 'supabase-js', 'dist', 'umd', 'supabase.js'), dist('vendor', 'supabase.js'));
 fs.writeFileSync(dist('.nojekyll'), '');
-console.log('built dist/ build=' + build + ' index=' + (html.length / 1024).toFixed(0) + 'KB');
+console.log('built docs/ build=' + build + ' index=' + (html.length / 1024).toFixed(0) + 'KB');

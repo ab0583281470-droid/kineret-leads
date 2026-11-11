@@ -1,10 +1,10 @@
-// Tiny static server for ./dist  (run: npm run serve   -> http://localhost:5177)
+// Tiny static server for ./docs  (run: npm run serve   -> http://localhost:5177)
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist');
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'docs');
 const port = Number(process.argv[2] || 5177);
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png' };
 

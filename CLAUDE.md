@@ -11,8 +11,8 @@ CRM web app for the "מצפה כנרת" project (marketing & management: שפר 
 - Never put personal data (leads, phone numbers, the Excel) in git. Never commit `.env*`, backups, or the owner's login.
 
 ## Architecture
-- Single-page app, no framework: `src/app.template.html` (HTML + CSS + JS in one file). `npm run build` → `dist/` (inlines logos + config, adds `sw.js`, manifest, icons, `vendor/supabase.js`).
-- Hosting: GitHub Pages serving the `gh-pages` branch (built site only). Publish with `npm run deploy` (builds and force-pushes `dist/` to `gh-pages`; takes ~1 min to appear). A GitHub Actions workflow (auto-deploy on push) is prepared but not enabled, because the stored GitHub token lacks the `workflow` scope.
+- Single-page app, no framework: `src/app.template.html` (HTML + CSS + JS in one file). `npm run build` → `docs/` (inlines logos + config, adds `sw.js`, manifest, icons, `vendor/supabase.js`). **`docs/` is committed to git** (it is what GitHub Pages serves).
+- Hosting: GitHub Pages serving **branch `main`, folder `/docs`**. Publishing = merge/push to `main` **with the rebuilt `docs/` included**; GitHub then updates the site by itself in ~1 minute. No Actions workflow, no deploy command.
 - Backend: Supabase project `kineret-leads` (`herokvahhjgasqosjwuu`, eu-central-1). One table `public.docs` (kind `lead|task|settings`, JSON `data`, `rev`, `seq`, `deleted`). RLS: only e-mails in `public.allowed_users`. Schema in `supabase/migrations/0001_init_docs.sql`.
 - Login: the owner types a username (digits); the app signs in as `<digits>@example.com`. Sign-ups must stay disabled in the dashboard. The password is **never** stored in the repo.
 - **Offline-first**: the app works on a local copy (`localStorage`, keys `crm-kineret-v2`, `crm-kineret-sync-v1`). Service worker caches the app shell. Sync engine (search `ONLINE: login + offline-first sync` in the template): pull by `seq`, push with optimistic concurrency (`rev`), field-level three-way merge, history/labels merged automatically, real clashes → conflict sheet asking the owner. Undo/redo history is local per device and not synced.
@@ -22,11 +22,13 @@ CRM web app for the "מצפה כנרת" project (marketing & management: שפר 
 `id, name, source ('פנו אלינו'|'בעלי יכולת'), via, phone, phone2, wa, email, city, address, community, age, heat, stage, status, about, labels[], history[], created, updated`. Task: `id, leadId, title, date, done`. Settings: heats (name+colour), stages, labels, vias, waTemplate.
 
 ## Commands
-- `npm ci && npm run build` – build; `npm run serve` – preview `dist/` on http://localhost:5177
+- `npm ci && npm run build` – build into `docs/`; `npm run serve` – preview `docs/` on http://localhost:5177
 - `npm run backup` – daily local backup (needs `.env.local`, see `.env.local.example`); `npm run restore -- <file>`
 - Backups go to `../backups` (outside the repo, never committed). Windows scheduled task "Kineret leads daily backup" runs it nightly.
 
 ## Notes for cloud sessions (computer may be off)
-- You can edit `src/`, push to `main`, then run `npm run deploy` to publish (the site does NOT redeploy by itself yet).
+- **Every change must end with:** `npm ci && npm run build` and then commit `src/` **and** `docs/` together (otherwise the live site does not change). Then push / open a PR to `main`; when it is merged the site updates by itself.
+- Never commit personal data, `.env*`, or backups. Do not create files under `docs/` by hand: always generate with the build.
+- After a change, tell the owner (in Hebrew) what changed and that they should close and reopen the site on the phone (the app is cached) – a refresh or two loads the new version.
 - You cannot reach the owner's local files (Excel, backups, `.env.local`). Database schema changes need a new file in `supabase/migrations/` plus applying it on Supabase (tell the owner if you cannot).
 - Test sync logic with an in-memory mock of the `REMOTE` adapter (see how `makeRemote()` is shaped) – never log in with the owner's credentials.
