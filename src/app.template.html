@@ -913,17 +913,23 @@ td.n small{font-weight:500;color:#66767f}
 .ft{margin-top:10px;color:#8a979f;font-size:10px;text-align:center}`;
 const pHead=(title,sub)=>`<div class="band"><img src="${LOGO_S}"><div class="t"><h1>${esc(title)}</h1><small>${esc(sub)}</small></div><img src="${LOGO_K}"></div>`;
 const pPill=n=>{const h=heatObj(n),l=isLight(h.c);return`<span class="p ${l?'lt':''}" style="background:${l?'#fff':h.c};color:${l?'#17252e':'#fff'}">${esc(n)}</span>`};
+const listCSS=`.ld{border:1px solid #e2e8eb;border-inline-start:5px solid var(--c);border-radius:8px;padding:7px 10px;margin:6px 0;page-break-inside:avoid;break-inside:avoid}
+.l1{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.nm{font-weight:800;font-size:12.5px}.nm small{font-weight:500;color:#66767f}
+.pl{display:flex;gap:4px;flex-wrap:wrap}.p.sr{background:#eef2f4;color:#44525b}
+.l2{margin:3px 0;font-size:10.5px;direction:ltr;text-align:right}.dv{color:#b8c4ca;margin:0 6px}
+.l3{margin-top:3px;font-size:11px}.tk{color:#9a5b00}`;
 function exportListPDF(all){
  const arr=all?sorted(DB.leads.slice()):sorted(DB.leads.filter(l=>match(l)));
  const now=new Date().toLocaleDateString('he-IL',{day:'numeric',month:'long',year:'numeric'});
- const rows=arr.map((l,i)=>`<tr><td class="n" style="--c:${heatCol(l.heat)}">${i+1}. ${esc(l.name)}${l.age?` <small>· ${esc(l.age)}</small>`:''}<div class="g sm" style="font-weight:500">${esc([l.city,l.community].filter(Boolean).join(' · '))}</div></td>
-  <td>${esc(l.source)}${l.via?`<div class="g sm">${esc(l.via)}</div>`:''}</td><td>${pPill(l.heat)}<div class="sm" style="margin-top:3px">${esc(l.stage)}</div></td>
-  <td class="ltr">${telA(l.phone)}${l.wa?`<div class="sm">${waA(l.wa)}</div>`:''}${l.phone2?`<div class="sm">${telA(l.phone2)}</div>`:''}${l.email?`<div class="sm">${mailA(l.email)}</div>`:''}</td>
-  <td>${l.status?esc(l.status):''}${l.about?`<div class="g sm">${esc(l.about)}</div>`:''}${openTasks(l.id).map(t=>`<div class="sm" style="color:#9a5b00">▸ ${esc(t.title)}${t.date?' ('+dueInfo(t.date).t+')':''}</div>`).join('')}</td></tr>`).join('');
- printHTML(`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>דוח לידים</title><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet"><style>${pCSS(true)}</style></head><body>
+ const rows=arr.map((l,i)=>{
+  const contacts=[l.phone?telA(l.phone):'',l.wa?`<span class="sm g">WA</span> ${waA(l.wa)}`:'',l.phone2?telA(l.phone2):'',l.email?mailA(l.email):''].filter(Boolean).join('<span class="dv">·</span>');
+  const tasks=openTasks(l.id).map(t=>`<div class="sm tk">▸ ${esc(t.title)}${t.date?' ('+dueInfo(t.date).t+')':''}</div>`).join('');
+  const meta=[l.city,l.community].filter(Boolean).join(' · ');
+  return`<div class="ld" style="--c:${heatCol(l.heat)}"><div class="l1"><span class="nm">${i+1}. ${esc(l.name)}${l.age?` <small>· ${esc(l.age)}</small>`:''}</span><span class="pl">${pPill(l.heat)}<span class="p lt" style="background:#fff">${esc(l.stage)}</span><span class="p sr">${esc(l.source)}${l.via?' · '+esc(l.via):''}</span></span></div>${meta?`<div class="g sm">${esc(meta)}</div>`:''}${contacts?`<div class="l2">${contacts}</div>`:''}${l.status?`<div class="l3">${esc(l.status)}</div>`:''}${l.about?`<div class="g sm">${esc(l.about)}</div>`:''}${tasks}</div>`}).join('');
+ printHTML(`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>דוח לידים</title><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet"><style>${pCSS(false)}${listCSS}</style></head><body>
  ${pHead('דוח לידים – מצפה כנרת',now+' · '+arr.length+' לידים')}
  <div class="fcs">${filterChipsHTML(all)}</div>
- <table><thead><tr><th style="width:21%">שם</th><th style="width:9%">מקור</th><th style="width:12%">רצינות / שלב</th><th style="width:17%">פרטי קשר</th><th>סטטוס ועל האיש</th></tr></thead><tbody>${rows}</tbody></table><div class="ft">מצפה כנרת · שפר נדל״ן – שיווק וניהול</div></body></html>`,all?'':filterFileName());
+ ${rows}<div class="ft">מצפה כנרת · שפר נדל״ן – שיווק וניהול</div></body></html>`,all?'':filterFileName());
  toast('נפתח חלון הדפסה – בחרו "שמור כ-PDF"')}
 function exportLeadPDF(l){
  const tasks=DB.tasks.filter(t=>t.leadId===l.id&&!t.done),hist=(l.history||[]);
