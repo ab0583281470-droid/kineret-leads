@@ -339,6 +339,16 @@ body.locked{overflow:hidden}
 @media(max-width:560px){.tools [data-redo]{display:none}.tools .gbtn{min-width:34px;padding:0 7px}.tools select{max-width:104px;padding:0 4px}.gbtn.sy .sytx{display:none}.gbtn.sy.conflict .sytx{display:inline}}
 .syn{display:none;font-size:12px}@media(max-width:560px){.syn{display:inline}}
 @media(min-width:1000px){.pdftx{display:inline}}
+.sh-head h3.nm{flex:1;min-width:0;font-size:21px;font-weight:800;margin:0;padding:8px 0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cgrid{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));margin-bottom:14px}.cgrid .crow .t b{white-space:nowrap}.cgrid .crw{margin-bottom:0}
+.dsec{background:#fff;border-radius:18px;padding:14px 16px 6px;box-shadow:var(--sh);margin-bottom:14px;border-top:4px solid var(--teal)}
+.dsec.per{border-top-color:var(--gold)}
+.dh{margin:0 0 12px;font-size:17px;font-weight:800;color:var(--teal-d)}.dsec.per .dh{color:#8a6410}
+.dsec .field input,.dsec .field select,.dsec .field textarea,.dsec .ta,.dsec .nb input,.dsec .nb textarea{background:#f9fbfc}
+.jrn{background:var(--gold-soft);border-radius:14px;padding:10px 12px 8px}.jrn>label{color:#8a6410;font-size:14px}.jrn .cnt2{background:#fff;border-radius:99px;padding:0 8px;font-size:12px;margin-inline-start:6px}
+.tl.big li{font-size:15px;padding:10px 12px}.tl.big .d{font-size:12.5px;color:#8a6410;margin-bottom:2px}.tl .none{color:var(--mut);border-inline-start-color:var(--line)}
+@media(min-width:1000px){.dgrid{grid-template-columns:1.12fr 1fr!important;gap:18px!important}}
+.cgrid .crow{min-height:50px;padding:5px 12px;gap:10px}.cgrid .crow .ci{width:34px;height:34px;font-size:16px}.cgrid .crow .t b{font-size:15.5px}.cgrid .crow .t small{font-size:11px}.cgrid .cp{width:50px;min-height:50px}
 </style>
 </head>
 <body>
@@ -381,7 +391,7 @@ body.locked{overflow:hidden}
 
 <div class="back" id="back"></div>
 <div class="sheet" id="shFilter"><div class="sh-head"><h3>סינון</h3><button class="rm-all" data-clearall id="fClear2" hidden></button><button class="iconbtn" data-close id="icClose1" style="width:42px;height:42px"></button></div><div class="sh-body" id="fBody" style="padding:0"></div><div class="sh-foot"><button class="btn pri" id="fApply" style="flex:1"></button></div></div>
-<div class="sheet tall" id="shLead"><div class="sh-head"><input class="nm" id="dName" placeholder="שם" autocomplete="off"><button class="iconbtn" id="dPdf" aria-label="PDF" title="ייצוא PDF לליד" style="width:42px;height:42px"></button><button class="iconbtn" data-close id="icClose2" style="width:42px;height:42px"></button></div><div class="sh-body" id="dBody"></div><div class="sh-foot"><button class="btn" id="lCancel">ביטול</button><button class="btn pri" id="lSave" style="flex:1">שמור</button></div></div>
+<div class="sheet tall" id="shLead"><div class="sh-head"><h3 class="nm" id="dTitle"></h3><button class="iconbtn" id="dPdf" aria-label="PDF" title="ייצוא PDF לליד" style="width:42px;height:42px"></button><button class="iconbtn" data-close id="icClose2" style="width:42px;height:42px"></button></div><div class="sh-body" id="dBody"></div><div class="sh-foot"><button class="btn" id="lCancel">ביטול</button><button class="btn pri" id="lSave" style="flex:1">שמור</button></div></div>
 <div class="sheet" id="shNew"><div class="sh-head"><h3>ליד חדש</h3><button class="iconbtn" data-close id="icClose3" style="width:42px;height:42px"></button></div><div class="sh-body" id="nBody"></div><div class="sh-foot"><button class="btn" id="nCancel">ביטול</button><button class="btn" id="nSaveMore">שמור והוסף עוד</button><button class="btn pri" id="nSave" style="flex:1">שמור</button></div></div>
 <div class="login checking" id="login">
  <div class="lbox">
@@ -666,49 +676,55 @@ $('#qclr').onclick=()=>{$('#q').value='';F.q='';render();$('#q').focus()};
 $('#sort').onchange=()=>{renderList();syncURL()};
 $('#btnPdf').onclick=()=>exportListPDF();
 /* ---------- lead drawer (draft model: Save / Cancel) ---------- */
-function openLead(id){const l=byId(id);if(!l)return;curLead=l;draft=JSON.parse(jstr(l));snapStr=jstr(draft);renderLead();openSheet('shLead','lead');$('#dBody').scrollTop=0}
+function openLead(id){const l=byId(id);if(!l)return;histAll=false;curLead=l;draft=JSON.parse(jstr(l));snapStr=jstr(draft);renderLead();openSheet('shLead','lead');$('#dBody').scrollTop=0}
 const allCities=()=>countVals(l=>l.city?[l.city]:[]);
 const cpBtn=(v,type)=>`<button class="cp" data-copy="${esc(v)}" ${type?`data-ctype="${type}"`:''} aria-label="העתק" title="העתק">${ic('copy',18)}</button>`;
 const crow=(cls,href,icon,label,val,go,type,extra)=>`<div class="crw"><a class="crow ${cls}" href="${href}"${extra||''}><span class="ci">${ic(icon)}</span><span class="t"><small>${label}</small><b>${esc(val)}</b></span><span class="go">${go}</span></a>${cpBtn(val,type)}</div>`;
 function contactRows(l){const t=telHref(l),w=waHref(l);
- return(t?crow('ph',t,'phone','טלפון',l.phone,'התקשר','tel'):'')+(w?crow('wa',w,'wa','וואצאפ',l.wa,'שלח הודעה','tel',' target="_blank" rel="noopener"'):'')+(l.phone2?crow('ph','tel:+'+intlOf(l.phone2),'phone','טלפון נוסף',l.phone2,'התקשר','tel'):'')+(l.email?crow('ml','mailto:'+esc(l.email),'mail','מייל',l.email,'כתוב',''):'')||`<div style="color:var(--mut);font-size:14px;margin-bottom:10px">אין עדיין פרטי קשר – אפשר להוסיף בסעיף "פרטים"</div>`}
+ return(t?crow('ph',t,'phone','טלפון',l.phone,'התקשר','tel'):'')+(w?crow('wa',w,'wa','וואצאפ',l.wa,'שלח הודעה','tel',' target="_blank" rel="noopener"'):'')+(l.phone2?crow('ph','tel:+'+intlOf(l.phone2),'phone','טלפון נוסף',l.phone2,'התקשר','tel'):'')+(l.email?crow('ml','mailto:'+esc(l.email),'mail','מייל',l.email,'כתוב',''):'')||`<div style="color:var(--mut);font-size:14px;margin-bottom:10px">אין עדיין פרטי קשר – אפשר להוסיף ב"פרטים אישיים"</div>`}
 function taskRow(t,showLead){const di=dueInfo(t.date),l=t.leadId?byId(t.leadId):null;
  return`<div class="trow ${t.done?'done':''}" data-tid="${t.id}"><button class="ck" data-tdone="${t.id}" aria-label="סמן כבוצע">${t.done?ic('check',16):''}</button><div class="tm"><div class="tt">${esc(t.title)}</div>${showLead&&l?`<button class="tl2" data-lead="${l.id}">${esc(l.name)}</button>`:''}</div>
  <label class="dp ${di.c}">${ic('cal',14)}<span>${di.t}</span><input type="date" data-tdate="${t.id}" value="${esc(t.date||'')}"></label><button class="x" data-tdel="${t.id}" aria-label="מחק">${ic('x',16)}</button></div>`}
+let histAll=false;
 function renderLead(){
- const l=draft;$('#dName').value=l.name||'';
+ const l=draft;$('#dTitle').textContent=l.name||'ללא שם';
  const hist=(l.history||[]);
  const tasks=DB.tasks.filter(x=>x.leadId===l.id).sort((a,b)=>(a.done-b.done)||(a.date||'9999').localeCompare(b.date||'9999'));
  const known=[...new Set([...S().labels,...(l.labels||[])])];
- const A=`<div class="c-badges" style="margin:0 0 12px" id="dBadges">${sourcePill(l)}${hpill(l.heat)}<span class="stg s-${esc(l.stage).replace(/ /g,'-')}">${esc(l.stage)}</span></div>
- <div id="cRows">${contactRows(l)}</div>
- <div class="grp" style="margin-top:16px"><label>כמה רציני</label><div class="hs" id="hsHeat">${S().heats.map(h=>{const lt=isLight(h.c);return`<button data-heat="${esc(h.n)}" style="--hc:${lt?'#c3cfd5':h.c}" class="${l.heat===h.n?'on':''} ${lt?'lt':''}"><span class="dt"></span>${esc(h.n)}</button>`}).join('')}</div></div>
- <div class="grp"><label>שלב</label><div class="seg" id="segStage">${S().stages.map(s=>`<button data-stage="${esc(s)}" class="${l.stage===s?'on':''}">${esc(s)}</button>`).join('')}</div></div>
- <div class="grp"><label>תיעוד מהיר – לחיצה אחת רושמת ביומן ומעדכנת שלב</label><div class="quick" id="logQuick">${LOGS.map((x,i)=>`<button data-log="${i}">${ic('check',15)} ${x.t}</button>`).join('')}</div>
-  <div class="nb"><textarea id="noteTxt" placeholder="כתבו הערה ליומן…"></textarea><button class="btn pri" id="noteAdd" style="flex:none">הוסף</button></div></div>
- <div class="grp"><label>משימות <span style="font-weight:500">(נשמרות מיד)</span></label>
-  ${tasks.map(x=>taskRow(x,false)).join('')}
-  <div class="quick tk2" id="tkQuick"><button data-tq="1">${ic('plus',14)} לחזור אליו: מחר</button><button data-tq="3">3 ימים</button><button data-tq="7">שבוע</button><button data-tq="14">שבועיים</button><button data-tq="30">חודש</button><button data-tq="0">בלי תאריך</button></div>
-  <div class="nb"><input id="tkTitle" type="text" placeholder="משימה אחרת… (ריק = לחזור אליו)"></div></div>`;
- const B=`<div class="grp"><label>סטטוס – מה קרה / מה אמר</label><textarea class="ta" data-f="status" style="min-height:84px">${esc(l.status)}</textarea></div>
- <div class="grp"><label>על האיש – רקע, מקצוע, קהילה, הערות עליו</label><textarea class="ta" data-f="about" style="min-height:70px">${esc(l.about)}</textarea></div>
- <div class="grp"><label>פרטים</label><div class="box"><div class="field">
-  <div class="full"><label>מקור</label><div class="seg" id="segSrc">${SOURCES.map(s=>`<button data-src2="${s}" class="${s==='בעלי יכולת'?'out ':''}${l.source===s?'on':''}">${s}</button>`).join('')}</div></div>
-  ${l.source==='פנו אלינו'?`<div class="full"><label>איך פנה אלינו?</label><div class="seg" id="segVia">${S().vias.map(v=>`<button data-via="${esc(v)}" class="${l.via===v?'on':''}">${esc(v)}</button>`).join('')}</div></div>`:''}
+ const shown=histAll?hist.length:Math.min(6,hist.length);
+ const items=hist.map((h,i)=>({h,i})).reverse().slice(0,shown);
+ const journal=`<div class="grp jrn"><label>יומן <span class="cnt2">${hist.length}</span></label><ul class="tl big">${items.map(({h,i})=>`<li><span class="d">${h.t?fmtDT(h.t):''}</span>${esc(h.text)}<button class="x" data-delh="${i}">${ic('x',14)}</button></li>`).join('')||'<li class="none">אין עדיין תיעוד. אפשר ללחוץ על אחד מכפתורי התיעוד המהיר, או לכתוב הערה.</li>'}</ul>${hist.length>6?`<button class="linkbtn" data-histall="1">${histAll?'הצג פחות':'הצג את כל '+hist.length+' הרשומות'}</button>`:''}</div>`;
+ const top=`<div class="c-badges" id="dBadges" style="margin:0 0 10px">${sourcePill(l)}${hpill(l.heat)}<span class="stg s-${esc(l.stage).replace(/ /g,'-')}">${esc(l.stage)}</span></div><div class="cgrid" id="cRows">${contactRows(l)}</div>`;
+ const act=`<section class="dsec act"><h4 class="dh">סטטוס ופעילות</h4>
+  <div class="grp"><label>סטטוס – מה קרה / מה אמר</label><textarea class="ta" data-f="status" style="min-height:84px">${esc(l.status)}</textarea></div>
+  <div class="grp"><label>כמה רציני</label><div class="hs" id="hsHeat">${S().heats.map(h=>{const lt=isLight(h.c);return`<button data-heat="${esc(h.n)}" style="--hc:${lt?'#c3cfd5':h.c}" class="${l.heat===h.n?'on':''} ${lt?'lt':''}"><span class="dt"></span>${esc(h.n)}</button>`}).join('')}</div></div>
+  <div class="grp"><label>שלב</label><div class="seg" id="segStage">${S().stages.map(s=>`<button data-stage="${esc(s)}" class="${l.stage===s?'on':''}">${esc(s)}</button>`).join('')}</div></div>
+  <div class="grp"><label>תיעוד מהיר – לחיצה אחת רושמת ביומן ומעדכנת שלב</label><div class="quick" id="logQuick">${LOGS.map((x,i)=>`<button data-log="${i}">${ic('check',15)} ${x.t}</button>`).join('')}</div>
+   <div class="nb"><textarea id="noteTxt" placeholder="כתבו הערה ליומן…"></textarea><button class="btn pri" id="noteAdd" style="flex:none">הוסף</button></div></div>
+  ${journal}
+  <div class="grp"><label>משימות <span style="font-weight:500">(נשמרות מיד)</span></label>
+   ${tasks.map(x=>taskRow(x,false)).join('')}
+   <div class="quick tk2" id="tkQuick"><button data-tq="1">${ic('plus',14)} לחזור אליו: מחר</button><button data-tq="3">3 ימים</button><button data-tq="7">שבוע</button><button data-tq="14">שבועיים</button><button data-tq="30">חודש</button><button data-tq="0">בלי תאריך</button></div>
+   <div class="nb"><input id="tkTitle" type="text" placeholder="משימה אחרת… (ריק = לחזור אליו)"></div></div>
+ </section>`;
+ const per=`<section class="dsec per"><h4 class="dh">פרטים אישיים</h4><div class="field">
+  <div class="full"><label>שם</label><input data-f="name" value="${esc(l.name)}" autocomplete="off"></div>
   <div><label>טלפון</label><input dir="ltr" data-f="phone" type="tel" value="${esc(l.phone)}" inputmode="tel"></div>
   <div><label>טלפון נוסף</label><input dir="ltr" data-f="phone2" type="tel" value="${esc(l.phone2)}" inputmode="tel"></div>
   <div class="full"><label>וואצאפ (ריק = אין כפתור וואצאפ)</label><div class="inl"><input dir="ltr" data-f="wa" type="tel" value="${esc(l.wa)}" inputmode="tel" id="waIn"><button class="btn sm" id="waSame" style="flex:none;height:46px">אותו מספר</button></div></div>
   <div class="full"><label>מייל</label><input dir="ltr" data-f="email" type="email" value="${esc(l.email)}" inputmode="email"></div>
   <div><label>עיר</label><input data-f="city" list="dlCity" value="${esc(l.city)}"></div>
-  <div><label>קהילה</label><input data-f="community" value="${esc(l.community)}"></div>
   <div><label>שכונה / כתובת</label><input data-f="address" value="${esc(l.address)}"></div>
+  <div><label>קהילה</label><input data-f="community" value="${esc(l.community)}"></div>
   <div><label>גיל</label><input data-f="age" value="${esc(l.age)}" inputmode="numeric"></div>
- </div></div></div>
- <div class="grp"><label>תוויות</label><div class="seg" id="lbWrap" style="gap:6px">${known.map(x=>`<button data-lb="${esc(x)}" class="${(l.labels||[]).includes(x)?'on':''}" style="flex:none;min-width:0;height:38px">${esc(x)}</button>`).join('')}</div>
+  <div class="full"><label>על האיש – רקע, מקצוע, הערות עליו</label><textarea data-f="about" style="min-height:70px">${esc(l.about)}</textarea></div>
+  <div class="full"><label>מקור</label><div class="seg" id="segSrc">${SOURCES.map(s=>`<button data-src2="${s}" class="${s==='בעלי יכולת'?'out ':''}${l.source===s?'on':''}">${s}</button>`).join('')}</div></div>
+  ${l.source==='פנו אלינו'?`<div class="full"><label>איך פנה אלינו?</label><div class="seg" id="segVia">${S().vias.map(v=>`<button data-via="${esc(v)}" class="${l.via===v?'on':''}">${esc(v)}</button>`).join('')}</div></div>`:''}
+ </div>
+ <div class="grp" style="margin-top:14px"><label>תוויות</label><div class="seg" id="lbWrap" style="gap:6px">${known.map(x=>`<button data-lb="${esc(x)}" class="${(l.labels||[]).includes(x)?'on':''}" style="flex:none;min-width:0;height:38px">${esc(x)}</button>`).join('')}</div>
   <div class="nb"><input id="lbNew" type="text" placeholder="תווית חדשה…"><button class="btn" id="lbAdd" style="flex:none">הוסף</button></div></div>
- <div class="grp"><label>יומן</label><ul class="tl">${hist.slice().reverse().map((h,i)=>`<li><span class="d">${h.t?fmtDT(h.t):''}</span>${esc(h.text)}<button class="x" data-delh="${hist.length-1-i}">${ic('x',14)}</button></li>`).join('')||'<li style="color:var(--mut);border-inline-start-color:var(--line)">אין עדיין תיעוד</li>'}</ul></div>
- <datalist id="dlCity">${allCities().map(c=>`<option value="${esc(c)}">`).join('')}</datalist>`;
- $('#dBody').innerHTML=`<div class="dgrid"><div>${A}</div><div>${B}</div></div><div style="margin-top:26px;padding-top:16px;border-top:1px dashed var(--line)"><button class="btn danger" id="dDelete" style="width:100%">${ic('trash',16)} מחק את הליד</button></div>`}
+ </section>`;
+ $('#dBody').innerHTML=`${top}<div class="dgrid">${act}${per}</div><div style="margin-top:10px;padding-top:16px;border-top:1px dashed var(--line)"><button class="btn danger" id="dDelete" style="width:100%">${ic('trash',16)} מחק את הליד</button></div><datalist id="dlCity">${allCities().map(c=>`<option value="${esc(c)}">`).join('')}</datalist>`}
 function rerender(){const st=$('#dBody').scrollTop;renderLead();$('#dBody').scrollTop=st}
 function logEntry(l,text,stage){(l.history=l.history||[]).push({t:new Date().toISOString(),text});l.lastContact=new Date().toISOString();
  if(stage&&S().stages.includes(stage)){const c=stageRank(l.stage),n=stageRank(stage);if(n>c||(stage==='לא עונה'&&stageRank(l.stage)<=1))l.stage=stage}}
@@ -716,10 +732,10 @@ function addTask(leadId,title,date){act('הוספת משימה',()=>{DB.tasks.pu
 function toggleDone(id){const t=DB.tasks.find(x=>x.id===id);if(!t)return;act(t.done?'משימה נפתחה מחדש':'המשימה בוצעה ✓',()=>{t.done=!t.done;t.doneAt=t.done?new Date().toISOString():''});renderBadge()}
 function afterTaskChange(){renderBadge();if(page==='tasks')renderTasks();if(cur&&cur.type==='lead')rerender()}
 const D=$('#dBody');
-D.addEventListener('input',e=>{const f=e.target.dataset.f;if(!f||!draft)return;draft[f]=e.target.value;if(['phone','phone2','wa','email'].includes(f))$('#cRows').innerHTML=contactRows(draft)});
-$('#dName').addEventListener('input',e=>{if(draft)draft.name=e.target.value});
+D.addEventListener('input',e=>{const f=e.target.dataset.f;if(!f||!draft)return;draft[f]=e.target.value;if(f==='name')$('#dTitle').textContent=e.target.value||'ללא שם';if(['phone','phone2','wa','email'].includes(f))$('#cRows').innerHTML=contactRows(draft)});
 D.addEventListener('change',e=>{if(e.target.dataset.tdate){const t=DB.tasks.find(x=>x.id===e.target.dataset.tdate);act('שינוי תאריך משימה',()=>{t.date=e.target.value});afterTaskChange()}});
 D.addEventListener('click',e=>{const l=draft;if(!l)return;const t=e.target;
+ if(t.closest('[data-histall]')){histAll=!histAll;rerender();return}
  const hb=t.closest('[data-heat]');if(hb){l.heat=hb.dataset.heat;if(l.heat==='חתם'&&S().stages.includes('חתם'))l.stage='חתם';rerender();return}
  const sb=t.closest('[data-stage]');if(sb){l.stage=sb.dataset.stage;rerender();return}
  const ss=t.closest('[data-src2]');if(ss){l.source=ss.dataset.src2;if(l.source!=='פנו אלינו')l.via='';rerender();return}
@@ -745,15 +761,17 @@ function deleteLead(){const l=draft;if(!l)return;showDlg('למחוק את "'+(l.
 $('#dPdf').onclick=()=>draft&&exportLeadPDF(draft);
 /* ---------- new lead ---------- */
 let NEW=null;
-const newState=()=>({source:'',via:'',name:'',phone:'',wa:'',waSame:false,email:'',city:'',heat:defHeat(),status:''});
+const newState=()=>({source:'',via:'',name:'',phone:'',phone2:'',wa:'',waSame:false,email:'',city:'',heat:defHeat(),status:''});
 function renderNew(){const n=NEW;const st=$('#nBody').scrollTop;
  $('#nBody').innerHTML=`
  <div class="grp"><label>1 · איך הגיע הליד?</label><div class="seg big"><button class="${n.source==='פנו אלינו'?'on':''}" data-nsrc="פנו אלינו">${ic('inn',20)}פנו אלינו<small>הוא יצר קשר</small></button><button class="out ${n.source==='בעלי יכולת'?'on':''}" data-nsrc="בעלי יכולת">${ic('out',20)}בעלי יכולת<small>שיחה שאנחנו יזמנו</small></button></div></div>
  ${n.source==='פנו אלינו'?`<div class="grp"><label>2 · מאיפה פנה?</label><div class="seg" id="nVia">${S().vias.map(v=>`<button data-nvia="${esc(v)}" class="${n.via===v?'on':''}" style="height:50px">${esc(v)}</button>`).join('')}</div></div>`:''}
  ${n.source?`<div class="grp"><label>${n.source==='פנו אלינו'?'3':'2'} · פרטים</label><div class="field">
   <div class="full"><label>שם</label><input data-n="name" value="${esc(n.name)}" placeholder="שם מלא" id="nName"></div>
-  ${n.via==='מייל'?`<div class="full"><label>מייל</label><input dir="ltr" data-n="email" type="email" value="${esc(n.email)}"></div><div class="full"><label>טלפון (אם יש)</label><input dir="ltr" data-n="phone" type="tel" value="${esc(n.phone)}" inputmode="tel"></div>`:`<div class="full"><label>טלפון</label><input dir="ltr" data-n="phone" type="tel" value="${esc(n.phone)}" inputmode="tel"></div><div class="full"><label>מייל (אם יש)</label><input dir="ltr" data-n="email" type="email" value="${esc(n.email)}"></div>`}
+  <div><label>טלפון</label><input dir="ltr" data-n="phone" type="tel" value="${esc(n.phone)}" inputmode="tel"></div>
+  <div><label>טלפון נוסף</label><input dir="ltr" data-n="phone2" type="tel" value="${esc(n.phone2)}" inputmode="tel"></div>
   <div class="full"><label>וואצאפ (ריק = אין)</label><div class="inl"><input dir="ltr" data-n="wa" type="tel" value="${esc(n.waSame?n.phone:n.wa)}" inputmode="tel" ${n.waSame?'disabled':''} id="nWa"><button class="btn sm ${n.waSame?'pri':''}" id="nWaSame" style="flex:none;height:46px">${n.waSame?'✓ ':''}אותו מספר כמו הטלפון</button></div></div>
+  <div class="full"><label>מייל</label><input dir="ltr" data-n="email" type="email" value="${esc(n.email)}" inputmode="email"></div>
   <div class="full"><label>עיר</label><input data-n="city" list="dlCity2" value="${esc(n.city)}" id="nCity">
    <div class="quick" style="margin-top:7px;gap:6px">${allCities().slice(0,8).map(c=>`<button data-ncity="${esc(c)}" class="${n.city===c?'on':''}" style="height:36px;padding:0 12px;font-size:13.5px">${esc(c)}</button>`).join('')}</div></div></div><div id="nDup"></div></div>
  <div class="grp"><label>כמה רציני</label><div class="hs">${S().heats.map(h=>{const lt=isLight(h.c);return`<button data-nheat="${esc(h.n)}" style="--hc:${lt?'#c3cfd5':h.c}" class="${n.heat===h.n?'on':''} ${lt?'lt':''}"><span class="dt"></span>${esc(h.n)}</button>`}).join('')}</div></div>
@@ -772,7 +790,7 @@ NB.addEventListener('input',e=>{const f=e.target.dataset.n;if(!f)return;NEW[f]=e
  if(f==='phone'){if(NEW.waSame)$('#nWa').value=e.target.value;const k=String(e.target.value).replace(/\D/g,'').slice(-9);const d=k.length>=9?DB.leads.find(l=>String(l.phone).replace(/\D/g,'').slice(-9)===k):null;$('#nDup').innerHTML=d?`<div class="box" style="background:#fff3e0;margin-top:8px">קיים כבר: <b>${esc(d.name)}</b> <button class="linkbtn" data-open="${d.id}">פתח כרטיס</button></div>`:''}});
 function saveNew(more){const n=NEW;if(!n.source){toast('בחרו קודם: פנו אלינו / בעלי יכולת');return}
  if(!n.name.trim()&&!n.phone.trim()&&!n.email.trim()){toast('נא למלא שם, טלפון או מייל');return}
- const l={id:uid('L'),name:n.name.trim()||n.phone||n.email,alias:'',source:n.source,via:n.via,phone:n.phone.trim(),phone2:'',wa:(n.waSame?n.phone:n.wa).trim(),email:n.email.trim(),city:n.city.trim(),address:'',community:'',age:'',heat:n.heat,stage:n.status.trim()?'שוחחנו':'חדש',status:n.status.trim(),about:'',labels:[],history:[],lastContact:'',created:new Date().toISOString(),updated:new Date().toISOString()};
+ const l={id:uid('L'),name:n.name.trim()||n.phone||n.email,alias:'',source:n.source,via:n.via,phone:n.phone.trim(),phone2:n.phone2.trim(),wa:(n.waSame?n.phone:n.wa).trim(),email:n.email.trim(),city:n.city.trim(),address:'',community:'',age:'',heat:n.heat,stage:n.status.trim()?'שוחחנו':'חדש',status:n.status.trim(),about:'',labels:[],history:[],lastContact:'',created:new Date().toISOString(),updated:new Date().toISOString()};
  act('הוספת ליד: '+l.name,()=>{DB.leads.push(l)});
  if(more){const keep={source:n.source,via:n.via};NEW=Object.assign(newState(),keep);renderNew();setTimeout(()=>{const i=$('#nName');i&&i.focus()},30);render()}
  else{NEW=null;closeSheet()}}
