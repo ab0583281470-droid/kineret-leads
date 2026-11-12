@@ -375,7 +375,7 @@ body.locked{overflow:hidden}
      <div class="tools"><span id="resCount"></span><span class="grow"></span>
        <button class="gbtn sy" id="syncBadge" aria-label="סנכרון"></button>
        <button class="gbtn" data-undo title="חזור פעולה (Ctrl+Z)" aria-label="חזור פעולה"></button><button class="gbtn" data-redo title="בצע שוב" aria-label="בצע שוב"></button><button class="gbtn" id="btnPdf" title="ייצוא PDF"></button>
-       <select id="sort" aria-label="מיון"><option value="updated" selected>עודכן לאחרונה</option><option value="newest">נוספו לאחרונה</option><option value="stage">הכי מתקדמים</option><option value="heat">הכי חמים</option><option value="task">משימה קרובה</option><option value="name">לפי א-ב</option><option value="city">לפי עיר</option></select></div>
+       <select id="sort" aria-label="מיון"><option value="newest" selected>נוספו לאחרונה</option><option value="updated">עודכן לאחרונה</option><option value="stage">הכי מתקדמים</option><option value="heat">הכי חמים</option><option value="task">משימה קרובה</option><option value="name">לפי א-ב</option><option value="city">לפי עיר</option></select></div>
      <div class="pills" id="pills"></div>
      <div class="grid" id="list"></div>
     </div>
@@ -553,13 +553,13 @@ function describeFilters(){const p=[];if(F.q.trim())p.push('חיפוש: '+F.q.tr
 let ignoreHashUntil=0;
 const PAGES=['leads','tasks','stats','settings'];
 let page='leads';
-function hashFromState(){let h='#/'+page;if(page==='leads'){const p=new URLSearchParams();if(F.q.trim())p.set('q',F.q.trim());GROUPS.forEach(g=>{if(F[g.k].size)p.set(g.k,[...F[g.k]].join('|'))});const so=$('#sort').value;if(so!=='updated')p.set('sort',so);const qs=p.toString();if(qs)h+='?'+qs}return h}
+function hashFromState(){let h='#/'+page;if(page==='leads'){const p=new URLSearchParams();if(F.q.trim())p.set('q',F.q.trim());GROUPS.forEach(g=>{if(F[g.k].size)p.set(g.k,[...F[g.k]].join('|'))});const so=$('#sort').value;if(so!=='newest')p.set('sort',so);const qs=p.toString();if(qs)h+='?'+qs}return h}
 function syncURL(){try{const h=hashFromState();if(location.hash!==h)history.replaceState(history.state,'',h)}catch(e){}}
 function applyHash(){
  const raw=location.hash.replace(/^#\/?/,''),[p,qs]=raw.split('?');
- Object.keys(F).forEach(k=>{if(F[k] instanceof Set)F[k].clear()});F.q='';let so='updated';
- if(qs){const u=new URLSearchParams(qs);F.q=u.get('q')||'';GROUPS.forEach(g=>{const v=u.get(g.k);if(v)v.split('|').forEach(x=>F[g.k].add(x))});so=u.get('sort')||'updated'}
- $('#q').value=F.q;$('#sort').value=$('#sort').querySelector(`option[value="${so}"]`)?so:'updated';
+ Object.keys(F).forEach(k=>{if(F[k] instanceof Set)F[k].clear()});F.q='';let so='newest';
+ if(qs){const u=new URLSearchParams(qs);F.q=u.get('q')||'';GROUPS.forEach(g=>{const v=u.get(g.k);if(v)v.split('|').forEach(x=>F[g.k].add(x))});so=u.get('sort')||'newest'}
+ $('#q').value=F.q;$('#sort').value=$('#sort').querySelector(`option[value="${so}"]`)?so:'newest';
  showPage(PAGES.includes(p)?p:'leads')}
 function showPage(p){page=p;$$('.page').forEach(e=>e.classList.toggle('on',e.id==='p-'+p));buildNav();$('#fab').hidden=p!=='leads'}
 function nav(p,push){
@@ -614,7 +614,7 @@ const NAV=[['leads','users','לידים'],['tasks','tasks','משימות'],['sta
 function buildNav(){const h=NAV.map(([k,i,t])=>`<button data-nav="${k}" class="${page===k?'on':''}">${ic(i)}<span>${t}</span>${k==='tasks'?'<span class="bdg" hidden></span>':''}</button>`).join('');$('#railNav').innerHTML=h;$('#bnav').innerHTML=h;renderBadge()}
 function goHome(){
  if(cur){hideVisual();const c=cur;cur=null;if(c.pushed){ignorePop++;ignoreHashUntil=Date.now()+1500;try{history.back()}catch(e){ignorePop--}}onClosed(c)}
- Object.keys(F).forEach(k=>{if(F[k] instanceof Set)F[k].clear()});F.q='';$('#q').value='';$('#sort').value='updated';
+ Object.keys(F).forEach(k=>{if(F[k] instanceof Set)F[k].clear()});F.q='';$('#q').value='';$('#sort').value='newest';
  nav('leads',true);window.scrollTo(0,0)}
 document.addEventListener('click',e=>{if(e.target.closest('[data-home]'))goHome()});
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('[data-home]')){e.preventDefault();goHome()}});
