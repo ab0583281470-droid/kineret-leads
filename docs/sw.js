@@ -1,7 +1,7 @@
 // Service worker: makes the app open and work with no connection.
 // - the app files are cached (network first, so updates arrive as soon as you are online)
 // - requests to Supabase (data/login) are never cached here; the app keeps its own local copy of the data
-const CACHE = 'kineret-leads-mwcs4cq3';
+const CACHE = 'kineret-leads-mwdkmcqq';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'vendor/supabase.js', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-180.png'];
 
 self.addEventListener('install', (e) => {
