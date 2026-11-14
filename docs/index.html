@@ -375,7 +375,7 @@ body.locked{overflow:hidden}
      <div class="tools"><span id="resCount"></span><span class="grow"></span>
        <button class="gbtn sy" id="syncBadge" aria-label="סנכרון"></button>
        <button class="gbtn" data-undo title="חזור פעולה (Ctrl+Z)" aria-label="חזור פעולה"></button><button class="gbtn" data-redo title="בצע שוב" aria-label="בצע שוב"></button><button class="gbtn" id="btnPdf" title="ייצוא PDF"></button>
-       <select id="sort" aria-label="מיון"><option value="newest" selected>נוספו לאחרונה</option><option value="updated">עודכן לאחרונה</option><option value="stage">הכי מתקדמים</option><option value="heat">הכי חמים</option><option value="task">משימה קרובה</option><option value="name">לפי א-ב</option><option value="city">לפי עיר</option></select></div>
+       <select id="sort" aria-label="מיון"><option value="newest" selected>נוספו לאחרונה</option><option value="updated">עודכן לאחרונה</option><option value="stage">הכי מתקדמים</option><option value="heat">הכי חמים</option><option value="task">משימה קרובה</option><option value="name">לפי א-ב</option><option value="surname">לפי שם משפחה</option><option value="city">לפי עיר</option></select></div>
      <div class="pills" id="pills"></div>
      <div class="grid" id="list"></div>
     </div>
@@ -539,6 +539,7 @@ function match(l,skip){
  return true}
 const facet=(g,v)=>DB.leads.reduce((n,l)=>n+(match(l,g.k)&&g.get(l).includes(v)?1:0),0);
 const activeCount=()=>GROUPS.reduce((n,g)=>n+F[g.k].size,0);
+const lw=s=>(String(s||"").trim().split(/\s+/).pop()||"");
 function sorted(arr){
  const m=$('#sort').value,c=(a,b)=>String(a).localeCompare(String(b),'he');
  const f={heat:(a,b)=>heatRank(a.heat)-heatRank(b.heat)||stageRank(b.stage)-stageRank(a.stage)||c(a.name,b.name),
@@ -546,7 +547,7 @@ function sorted(arr){
   task:(a,b)=>((nextTask(a.id)||{}).date||'9999').localeCompare((nextTask(b.id)||{}).date||'9999')||heatRank(a.heat)-heatRank(b.heat),
   updated:(a,b)=>String(b.updated||'').localeCompare(String(a.updated||''))||heatRank(a.heat)-heatRank(b.heat),
   newest:(a,b)=>String(b.created||'').localeCompare(String(a.created||''))||heatRank(a.heat)-heatRank(b.heat)||c(a.name,b.name),
-  name:(a,b)=>c(a.name,b.name),city:(a,b)=>c(a.city||'תתת',b.city||'תתת')||heatRank(a.heat)-heatRank(b.heat)}[m];
+  name:(a,b)=>c(a.name,b.name),surname:(a,b)=>(lw(a.name)||"").localeCompare(lw(b.name)||"",'he')||c(a.name,b.name),city:(a,b)=>c(a.city||'תתת',b.city||'תתת')||heatRank(a.heat)-heatRank(b.heat)}[m];
  return arr.sort(f)}
 function describeFilters(){const p=[];if(F.q.trim())p.push('חיפוש: '+F.q.trim());GROUPS.forEach(g=>{if(F[g.k].size)p.push(g.label+': '+[...F[g.k]].join(', '))});return p.join(' · ')}
 /* ---------- URL state ---------- */
