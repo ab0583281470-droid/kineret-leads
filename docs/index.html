@@ -765,7 +765,7 @@ function deleteLead(){const l=draft;if(!l)return;showDlg('למחוק את "'+(l.
 $('#dPdf').onclick=()=>draft&&exportLeadPDF(draft);
 /* ---------- new lead ---------- */
 let NEW=null;
-const newState=()=>({source:'',via:'',name:'',phone:'',phone2:'',wa:'',waSame:false,email:'',city:'',address:'',community:'',age:'',about:'',labels:[],heat:defHeat(),stage:'',status:''});
+const newState=()=>({source:'',via:'',name:'',phone:'',phone2:'',wa:'',waSame:false,email:'',city:'',address:'',community:'',age:'',about:'',labels:[],history:[],tasks:[],lastContact:'',heat:defHeat(),stage:'',status:''});
 function renderNew(){const n=NEW;const st=$('#nBody').scrollTop;
  const known=[...new Set([...S().labels,...(n.labels||[])])];
  const src=`<section class="dsec"><h4 class="dh">איך הגיע הליד?</h4>
@@ -788,10 +788,19 @@ function renderNew(){const n=NEW;const st=$('#nBody').scrollTop;
  <div class="grp" style="margin-top:14px"><label>תוויות</label><div class="seg" id="nLbWrap" style="gap:6px">${known.map(x=>`<button data-nlb="${esc(x)}" class="${(n.labels||[]).includes(x)?'on':''}" style="flex:none;min-width:0;height:38px">${esc(x)}</button>`).join('')}</div>
   <div class="nb"><input id="nLbNew" type="text" placeholder="תווית חדשה…"><button class="btn" id="nLbAdd" style="flex:none">הוסף</button></div></div>
  </section>`;
+ const jrn=(n.history||[]).map((h,i)=>({h,i})).reverse();
+ const tkNew=(n.tasks||[]).map((x,i)=>{const di=dueInfo(x.date);return `<div class="trow"><div class="tm"><div class="tt">${esc(x.title)}</div></div><span class="dp ${di.c}">${ic('cal',14)}<span>${di.t}</span></span><button class="x" data-ntdel="${i}" aria-label="מחק">${ic('x',16)}</button></div>`}).join('');
  const act=`<section class="dsec act"><h4 class="dh">סטטוס ופעילות</h4>
   <div class="grp"><label>סטטוס – מה קרה / מה אמר (אפשר להשאיר ריק)</label><textarea class="ta" data-n="status" style="min-height:84px">${esc(n.status)}</textarea></div>
   <div class="grp"><label>כמה רציני</label><div class="hs">${S().heats.map(h=>{const lt=isLight(h.c);return`<button data-nheat="${esc(h.n)}" style="--hc:${lt?'#c3cfd5':h.c}" class="${n.heat===h.n?'on':''} ${lt?'lt':''}"><span class="dt"></span>${esc(h.n)}</button>`}).join('')}</div></div>
   <div class="grp"><label>שלב</label><div class="seg" id="nStage">${S().stages.map(x=>`<button data-nstage="${esc(x)}" class="${n.stage===x?'on':''}">${esc(x)}</button>`).join('')}</div></div>
+  <div class="grp"><label>תיעוד מהיר – לחיצה אחת רושמת ביומן ומעדכנת שלב</label><div class="quick" id="nLogQuick">${LOGS.map((x,i)=>`<button data-nlog="${i}">${ic('check',15)} ${x.t}</button>`).join('')}</div>
+   <div class="nb"><textarea id="nNoteTxt" placeholder="כתבו הערה ליומן…"></textarea><button class="btn pri" id="nNoteAdd" style="flex:none">הוסף</button></div></div>
+  <div class="grp jrn"><label>יומן <span class="cnt2">${(n.history||[]).length}</span></label><ul class="tl big">${jrn.map(({h,i})=>`<li><span class="d">${h.t?fmtDT(h.t):''}</span>${esc(h.text)}<button class="x" data-ndelh="${i}">${ic('x',14)}</button></li>`).join('')||'<li class="none">אין עדיין תיעוד.</li>'}</ul></div>
+  <div class="grp"><label>משימות <span style="font-weight:500">(יישמרו עם הליד)</span></label>
+   ${tkNew}
+   <div class="quick tk2" id="nTkQuick"><button data-ntq="1">${ic('plus',14)} לחזור אליו: מחר</button><button data-ntq="3">3 ימים</button><button data-ntq="7">שבוע</button><button data-ntq="14">שבועיים</button><button data-ntq="30">חודש</button><button data-ntq="0">בלי תאריך</button><label class="qdate">${ic('cal',14)} בחר תאריך<input type="date" id="nTkDate" aria-label="בחר תאריך"></label></div>
+   <div class="nb"><input id="nTkTitle" type="text" placeholder="משימה אחרת… (ריק = לחזור אליו)"></div></div>
  </section>`;
  $('#nBody').innerHTML=`${src}${per}${act}<datalist id="dlCity2">${allCities().map(c=>`<option value="${esc(c)}">`).join('')}</datalist>`;
  $('#nBody').scrollTop=st}
@@ -806,13 +815,20 @@ NB.addEventListener('click',e=>{const t=e.target;
  const ns=t.closest('[data-nstage]');if(ns){NEW.stage=NEW.stage===ns.dataset.nstage?'':ns.dataset.nstage;renderNew();return}
  const nl=t.closest('[data-nlb]');if(nl){const x=nl.dataset.nlb;NEW.labels=NEW.labels||[];const k=NEW.labels.indexOf(x);k>=0?NEW.labels.splice(k,1):NEW.labels.push(x);renderNew();return}
  if(t.closest('#nLbAdd')){const v=($('#nLbNew').value||'').trim();if(!v)return;NEW.labels=NEW.labels||[];if(!NEW.labels.includes(v))NEW.labels.push(v);renderNew();return}
+ const nlg=t.closest('[data-nlog]');if(nlg){const x=LOGS[+nlg.dataset.nlog];logEntry(NEW,x.t,x.stage);renderNew();toast('נרשם ביומן: '+x.t);return}
+ if(t.closest('#nNoteAdd')){const v=($('#nNoteTxt').value||'').trim();if(!v)return;logEntry(NEW,v,null);renderNew();return}
+ const ndh=t.closest('[data-ndelh]');if(ndh){NEW.history.splice(+ndh.dataset.ndelh,1);renderNew();return}
+ const ntq=t.closest('[data-ntq]');if(ntq){const d=+ntq.dataset.ntq;addPendingTask($('#nTkTitle').value,d?addDays(d):'');return}
+ const ntd=t.closest('[data-ntdel]');if(ntd){NEW.tasks.splice(+ntd.dataset.ntdel,1);renderNew();return}
  const o=t.closest('[data-open]');if(o){const id=o.dataset.open;NEW=null;closeSheet();setTimeout(()=>openLead(id),50)}});
 NB.addEventListener('input',e=>{const f=e.target.dataset.n;if(!f)return;NEW[f]=e.target.value;
  if(f==='phone'){if(NEW.waSame)$('#nWa').value=e.target.value;const k=String(e.target.value).replace(/\D/g,'').slice(-9);const d=k.length>=9?DB.leads.find(l=>String(l.phone).replace(/\D/g,'').slice(-9)===k):null;$('#nDup').innerHTML=d?`<div class="box" style="background:#fff3e0;margin-top:8px">קיים כבר: <b>${esc(d.name)}</b> <button class="linkbtn" data-open="${d.id}">פתח כרטיס</button></div>`:''}});
+function addPendingTask(title,date){NEW.tasks=NEW.tasks||[];NEW.tasks.push({title:(title||'').trim()||'לחזור אליו',date:date||''});renderNew()}
+NB.addEventListener('change',e=>{if(e.target.id==='nTkDate'&&e.target.value)addPendingTask($('#nTkTitle').value,e.target.value)});
 function saveNew(more){const n=NEW;if(!n.source){toast('בחרו קודם: פנו אלינו / בעלי יכולת');return}
  if(!n.name.trim()&&!n.phone.trim()&&!n.email.trim()){toast('נא למלא שם, טלפון או מייל');return}
- const l={id:uid('L'),name:n.name.trim()||n.phone||n.email,alias:'',source:n.source,via:n.via,phone:n.phone.trim(),phone2:n.phone2.trim(),wa:(n.waSame?n.phone:n.wa).trim(),email:n.email.trim(),city:n.city.trim(),address:n.address.trim(),community:n.community.trim(),age:n.age.trim(),heat:n.heat,stage:n.stage||(n.status.trim()?'שוחחנו':'חדש'),status:n.status.trim(),about:n.about.trim(),labels:[...(n.labels||[])],history:[],lastContact:'',created:new Date().toISOString(),updated:new Date().toISOString()};
- act('הוספת ליד: '+l.name,()=>{DB.leads.push(l);(l.labels||[]).forEach(x=>{if(!S().labels.includes(x))S().labels.push(x)})});
+ const l={id:uid('L'),name:n.name.trim()||n.phone||n.email,alias:'',source:n.source,via:n.via,phone:n.phone.trim(),phone2:n.phone2.trim(),wa:(n.waSame?n.phone:n.wa).trim(),email:n.email.trim(),city:n.city.trim(),address:n.address.trim(),community:n.community.trim(),age:n.age.trim(),heat:n.heat,stage:n.stage||(n.status.trim()?'שוחחנו':'חדש'),status:n.status.trim(),about:n.about.trim(),labels:[...(n.labels||[])],history:[...(n.history||[])],lastContact:n.lastContact||'',created:new Date().toISOString(),updated:new Date().toISOString()};
+ act('הוספת ליד: '+l.name,()=>{DB.leads.push(l);(l.labels||[]).forEach(x=>{if(!S().labels.includes(x))S().labels.push(x)});(n.tasks||[]).forEach(x=>DB.tasks.push({id:uid('T'),leadId:l.id,title:x.title,date:x.date||'',done:false,created:new Date().toISOString()}))});
  if(more){const keep={source:n.source,via:n.via};NEW=Object.assign(newState(),keep);renderNew();setTimeout(()=>{const i=$('#nName');i&&i.focus()},30);render()}
  else{NEW=null;closeSheet()}}
 $('#nSave').onclick=()=>saveNew(false);$('#nSaveMore').onclick=()=>saveNew(true);$('#nCancel').onclick=requestClose;
