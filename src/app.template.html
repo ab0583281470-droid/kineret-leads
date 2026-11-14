@@ -184,8 +184,11 @@ svg.i{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-l
 .quick button{height:44px;padding:0 13px;border-radius:12px;border:1.5px solid var(--line);background:#fff;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px}
 .quick button:active{background:var(--teal-soft)}
 .quick button.on{background:var(--teal);color:#fff;border-color:var(--teal)}
-.quick .qdate{position:relative;overflow:hidden;height:44px;padding:0 13px;border-radius:12px;border:1.5px solid var(--line);background:#fff;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;color:var(--ink)}
-.quick .qdate input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:0}
+.quick .qdate{display:flex;align-items:center;height:44px;border-radius:12px;border:1.5px solid var(--line);background:#fff;position:relative;overflow:hidden}
+.quick .qdate .qdt{border:0;outline:none;height:42px;width:124px;padding:0 12px;font-size:15px;font-weight:600;background:transparent;color:var(--ink);text-align:right;min-width:0}
+.quick .qdate:focus-within{border-color:var(--teal);box-shadow:0 0 0 4px rgba(27,135,148,.1)}
+.quick .qdate .qcal{border:0;border-inline-start:1.5px solid var(--line);background:none;height:42px;width:42px;padding:0;display:grid;place-items:center;color:var(--teal-d);flex:none;min-height:0;border-radius:0}
+.quick .qdate .qdh{position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
 .quick.tk2 button{border-color:#f0d9a8;background:#fffaf0;color:#7a5410}
 .nb{display:flex;gap:8px;margin-top:8px}
 .nb textarea{min-height:46px;height:46px;resize:none}
@@ -685,6 +688,9 @@ const cpBtn=(v,type)=>`<button class="cp" data-copy="${esc(v)}" ${type?`data-cty
 const crow=(cls,href,icon,label,val,go,type,extra)=>`<div class="crw"><a class="crow ${cls}" href="${href}"${extra||''}><span class="ci">${ic(icon)}</span><span class="t"><small>${label}</small><b>${esc(val)}</b></span><span class="go">${go}</span></a>${cpBtn(val,type)}</div>`;
 function contactRows(l){const t=telHref(l),w=waHref(l);
  return(t?crow('ph',t,'phone','טלפון',l.phone,'התקשר','tel'):'')+(w?crow('wa',w,'wa','וואצאפ',l.wa,'שלח הודעה','tel',' target="_blank" rel="noopener"'):'')+(l.phone2?crow('ph','tel:+'+intlOf(l.phone2),'phone','טלפון נוסף',l.phone2,'התקשר','tel'):'')+(l.email?crow('ml','mailto:'+esc(l.email),'mail','מייל',l.email,'כתוב',''):'')||`<div style="color:var(--mut);font-size:14px;margin-bottom:10px">אין עדיין פרטי קשר – אפשר להוסיף ב"פרטים אישיים"</div>`}
+const dateChip=()=>`<span class="qdate"><input class="qdt" type="text" dir="ltr" inputmode="numeric" placeholder="dd/mm/yy" aria-label="הקלידו תאריך"><button type="button" class="qcal" data-dcal aria-label="בחירה מלוח שנה">${ic('cal',16)}</button><input class="qdh" type="date" tabindex="-1" aria-hidden="true"></span>`;
+function parseDM(v){v=String(v||'').trim();if(!v)return '';const m=v.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2}|\d{4})$/);if(!m)return null;const d=+m[1],mo=+m[2];let y=+m[3];if(m[3].length===2)y+=2000;const dt=new Date(y,mo-1,d);if(dt.getFullYear()!==y||dt.getMonth()!==mo-1||dt.getDate()!==d)return null;return y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
+function openDatePicker(btn){const di=btn.parentElement.querySelector('.qdh');try{di.showPicker()}catch(_){di.focus();di.click()}}
 function taskRow(t,showLead){const di=dueInfo(t.date),l=t.leadId?byId(t.leadId):null;
  return`<div class="trow ${t.done?'done':''}" data-tid="${t.id}"><button class="ck" data-tdone="${t.id}" aria-label="סמן כבוצע">${t.done?ic('check',16):''}</button><div class="tm"><div class="tt">${esc(t.title)}</div>${showLead&&l?`<button class="tl2" data-lead="${l.id}">${esc(l.name)}</button>`:''}</div>
  <label class="dp ${di.c}">${ic('cal',14)}<span>${di.t}</span><input type="date" data-tdate="${t.id}" value="${esc(t.date||'')}"></label><button class="x" data-tdel="${t.id}" aria-label="מחק">${ic('x',16)}</button></div>`}
@@ -707,7 +713,7 @@ function renderLead(){
   ${journal}
   <div class="grp"><label>משימות <span style="font-weight:500">(נשמרות מיד)</span></label>
    ${tasks.map(x=>taskRow(x,false)).join('')}
-   <div class="quick tk2" id="tkQuick"><button data-tq="1">${ic('plus',14)} לחזור אליו: מחר</button><button data-tq="3">3 ימים</button><button data-tq="7">שבוע</button><button data-tq="14">שבועיים</button><button data-tq="30">חודש</button><button data-tq="0">בלי תאריך</button><label class="qdate">${ic('cal',14)} בחר תאריך<input type="date" id="tkDate" aria-label="בחר תאריך"></label></div>
+   <div class="quick tk2" id="tkQuick"><button data-tq="1">${ic('plus',14)} לחזור אליו: מחר</button><button data-tq="3">3 ימים</button><button data-tq="7">שבוע</button><button data-tq="14">שבועיים</button><button data-tq="30">חודש</button><button data-tq="0">בלי תאריך</button>${dateChip()}</div>
    <div class="nb"><input id="tkTitle" type="text" placeholder="משימה אחרת… (ריק = לחזור אליו)"></div></div>
  </section>`;
  const per=`<section class="dsec per"><h4 class="dh">פרטים אישיים</h4><div class="field">
@@ -746,6 +752,7 @@ D.addEventListener('click',e=>{const l=draft;if(!l)return;const t=e.target;
  const lg=t.closest('[data-log]');if(lg){const x=LOGS[+lg.dataset.log];logEntry(l,x.t,x.stage);rerender();toast('נרשם ביומן: '+x.t+' (לחצו שמור)');return}
  if(t.closest('#noteAdd')){const v=$('#noteTxt').value.trim();if(!v)return;logEntry(l,v,null);rerender();return}
  const dh=t.closest('[data-delh]');if(dh){l.history.splice(+dh.dataset.delh,1);rerender();return}
+ const dc=t.closest('[data-dcal]');if(dc){openDatePicker(dc);return}
  const tq=t.closest('[data-tq]');if(tq){const d=+tq.dataset.tq;addTask(l.id,$('#tkTitle').value,d?addDays(d):'');afterTaskChange();return}
  const td=t.closest('[data-tdone]');if(td){toggleDone(td.dataset.tdone);afterTaskChange();return}
  const tx=t.closest('[data-tdel]');if(tx){act('מחיקת משימה',()=>{DB.tasks=DB.tasks.filter(x=>x.id!==tx.dataset.tdel)});afterTaskChange();return}
@@ -760,7 +767,7 @@ function saveLead(){
 $('#lSave').onclick=saveLead;$('#lCancel').onclick=()=>{if(isDirty())askCloseDiscard();else closeSheet()};
 function askCloseDiscard(){showDlg('לבטל את השינויים?',[['כן, בטל שינויים','danger',()=>closeSheet()],['המשך עריכה','',()=>{}]])}
 $('#dBody').addEventListener('click',e=>{if(e.target.closest('#dDelete'))deleteLead()});
-$('#dBody').addEventListener('change',e=>{if(e.target.id==='tkDate'&&e.target.value&&draft){addTask(draft.id,$('#tkTitle').value,e.target.value);afterTaskChange()}});
+$('#dBody').addEventListener('change',e=>{const el=e.target;if(!el.closest||!el.closest('.qdate')||!draft)return;const v=el.classList.contains('qdh')?(el.value||''):parseDM(el.value);if(v===null){toast('התאריך לא תקין. כתבו כך: dd/mm/yy');return}if(!v)return;addTask(draft.id,$('#tkTitle').value,v);afterTaskChange()});
 function deleteLead(){const l=draft;if(!l)return;showDlg('למחוק את "'+(l.name||'הליד')+'" לצמיתות?',[['מחק','danger',()=>{const id=l.id;snapStr=jstr(draft);closeSheet();act('מחיקת ליד: '+(l.name||''),()=>{DB.leads=DB.leads.filter(x=>x.id!==id);DB.tasks=DB.tasks.filter(x=>x.leadId!==id)});render()}],['ביטול','',()=>{}]])}
 $('#dPdf').onclick=()=>draft&&exportLeadPDF(draft);
 /* ---------- new lead ---------- */
@@ -799,7 +806,7 @@ function renderNew(){const n=NEW;const st=$('#nBody').scrollTop;
   <div class="grp jrn"><label>יומן <span class="cnt2">${(n.history||[]).length}</span></label><ul class="tl big">${jrn.map(({h,i})=>`<li><span class="d">${h.t?fmtDT(h.t):''}</span>${esc(h.text)}<button class="x" data-ndelh="${i}">${ic('x',14)}</button></li>`).join('')||'<li class="none">אין עדיין תיעוד.</li>'}</ul></div>
   <div class="grp"><label>משימות <span style="font-weight:500">(יישמרו עם הליד)</span></label>
    ${tkNew}
-   <div class="quick tk2" id="nTkQuick"><button data-ntq="1">${ic('plus',14)} לחזור אליו: מחר</button><button data-ntq="3">3 ימים</button><button data-ntq="7">שבוע</button><button data-ntq="14">שבועיים</button><button data-ntq="30">חודש</button><button data-ntq="0">בלי תאריך</button><label class="qdate">${ic('cal',14)} בחר תאריך<input type="date" id="nTkDate" aria-label="בחר תאריך"></label></div>
+   <div class="quick tk2" id="nTkQuick"><button data-ntq="1">${ic('plus',14)} לחזור אליו: מחר</button><button data-ntq="3">3 ימים</button><button data-ntq="7">שבוע</button><button data-ntq="14">שבועיים</button><button data-ntq="30">חודש</button><button data-ntq="0">בלי תאריך</button>${dateChip()}</div>
    <div class="nb"><input id="nTkTitle" type="text" placeholder="משימה אחרת… (ריק = לחזור אליו)"></div></div>
  </section>`;
  $('#nBody').innerHTML=`${src}${per}${act}<datalist id="dlCity2">${allCities().map(c=>`<option value="${esc(c)}">`).join('')}</datalist>`;
@@ -815,6 +822,7 @@ NB.addEventListener('click',e=>{const t=e.target;
  const ns=t.closest('[data-nstage]');if(ns){NEW.stage=NEW.stage===ns.dataset.nstage?'':ns.dataset.nstage;renderNew();return}
  const nl=t.closest('[data-nlb]');if(nl){const x=nl.dataset.nlb;NEW.labels=NEW.labels||[];const k=NEW.labels.indexOf(x);k>=0?NEW.labels.splice(k,1):NEW.labels.push(x);renderNew();return}
  if(t.closest('#nLbAdd')){const v=($('#nLbNew').value||'').trim();if(!v)return;NEW.labels=NEW.labels||[];if(!NEW.labels.includes(v))NEW.labels.push(v);renderNew();return}
+ const ndc=t.closest('[data-dcal]');if(ndc){openDatePicker(ndc);return}
  const nlg=t.closest('[data-nlog]');if(nlg){const x=LOGS[+nlg.dataset.nlog];logEntry(NEW,x.t,x.stage);renderNew();toast('נרשם ביומן: '+x.t);return}
  if(t.closest('#nNoteAdd')){const v=($('#nNoteTxt').value||'').trim();if(!v)return;logEntry(NEW,v,null);renderNew();return}
  const ndh=t.closest('[data-ndelh]');if(ndh){NEW.history.splice(+ndh.dataset.ndelh,1);renderNew();return}
@@ -824,7 +832,7 @@ NB.addEventListener('click',e=>{const t=e.target;
 NB.addEventListener('input',e=>{const f=e.target.dataset.n;if(!f)return;NEW[f]=e.target.value;
  if(f==='phone'){if(NEW.waSame)$('#nWa').value=e.target.value;const k=String(e.target.value).replace(/\D/g,'').slice(-9);const d=k.length>=9?DB.leads.find(l=>String(l.phone).replace(/\D/g,'').slice(-9)===k):null;$('#nDup').innerHTML=d?`<div class="box" style="background:#fff3e0;margin-top:8px">קיים כבר: <b>${esc(d.name)}</b> <button class="linkbtn" data-open="${d.id}">פתח כרטיס</button></div>`:''}});
 function addPendingTask(title,date){NEW.tasks=NEW.tasks||[];NEW.tasks.push({title:(title||'').trim()||'לחזור אליו',date:date||''});renderNew()}
-NB.addEventListener('change',e=>{if(e.target.id==='nTkDate'&&e.target.value)addPendingTask($('#nTkTitle').value,e.target.value)});
+NB.addEventListener('change',e=>{const el=e.target;if(!el.closest||!el.closest('.qdate'))return;const v=el.classList.contains('qdh')?(el.value||''):parseDM(el.value);if(v===null){toast('התאריך לא תקין. כתבו כך: dd/mm/yy');return}if(v)addPendingTask($('#nTkTitle').value,v)});
 function saveNew(more){const n=NEW;if(!n.source){toast('בחרו קודם: פנו אלינו / בעלי יכולת');return}
  if(!n.name.trim()&&!n.phone.trim()&&!n.email.trim()){toast('נא למלא שם, טלפון או מייל');return}
  const l={id:uid('L'),name:n.name.trim()||n.phone||n.email,alias:'',source:n.source,via:n.via,phone:n.phone.trim(),phone2:n.phone2.trim(),wa:(n.waSame?n.phone:n.wa).trim(),email:n.email.trim(),city:n.city.trim(),address:n.address.trim(),community:n.community.trim(),age:n.age.trim(),heat:n.heat,stage:n.stage||(n.status.trim()?'שוחחנו':'חדש'),status:n.status.trim(),about:n.about.trim(),labels:[...(n.labels||[])],history:[...(n.history||[])],lastContact:n.lastContact||'',created:new Date().toISOString(),updated:new Date().toISOString()};
