@@ -768,6 +768,10 @@ let NEW=null;
 const newState=()=>({source:'',via:'',name:'',phone:'',phone2:'',wa:'',waSame:false,email:'',city:'',address:'',community:'',age:'',about:'',labels:[],heat:defHeat(),stage:'',status:''});
 function renderNew(){const n=NEW;const st=$('#nBody').scrollTop;
  const known=[...new Set([...S().labels,...(n.labels||[])])];
+ const src=`<section class="dsec"><h4 class="dh">איך הגיע הליד?</h4>
+ <div class="seg big"><button class="${n.source==='פנו אלינו'?'on':''}" data-nsrc="פנו אלינו">${ic('inn',20)}פנו אלינו<small>הוא יצר קשר</small></button><button class="out ${n.source==='בעלי יכולת'?'on':''}" data-nsrc="בעלי יכולת">${ic('out',20)}בעלי יכולת<small>שיחה שאנחנו יזמנו</small></button></div>
+ ${n.source==='פנו אלינו'?`<div style="margin-top:12px"><label style="display:block;font-size:12.5px;color:var(--mut);font-weight:700;margin-bottom:6px">מאיפה פנה?</label><div class="seg" id="nVia">${S().vias.map(v=>`<button data-nvia="${esc(v)}" class="${n.via===v?'on':''}" style="height:50px">${esc(v)}</button>`).join('')}</div></div>`:''}
+ </section>`;
  const per=`<section class="dsec per"><h4 class="dh">פרטים אישיים</h4><div class="field">
   <div class="full"><label>שם</label><input data-n="name" value="${esc(n.name)}" placeholder="שם מלא" id="nName" autocomplete="off"></div>
   <div><label>טלפון</label><input dir="ltr" data-n="phone" type="tel" value="${esc(n.phone)}" inputmode="tel"></div>
@@ -779,8 +783,7 @@ function renderNew(){const n=NEW;const st=$('#nBody').scrollTop;
   <div><label>קהילה</label><input data-n="community" value="${esc(n.community)}"></div>
   <div><label>גיל</label><input data-n="age" value="${esc(n.age)}" inputmode="numeric"></div>
   <div class="full"><label>על האיש – רקע, מקצוע, הערות עליו</label><textarea data-n="about" style="min-height:70px">${esc(n.about)}</textarea></div>
-  <div class="full"><label>מקור</label><div class="seg" id="nSrc">${SOURCES.map(s=>`<button data-nsrc="${s}" class="${s==='בעלי יכולת'?'out ':''}${n.source===s?'on':''}">${s}</button>`).join('')}</div></div>
-  ${n.source==='פנו אלינו'?`<div class="full"><label>איך פנה אלינו?</label><div class="seg" id="nVia">${S().vias.map(v=>`<button data-nvia="${esc(v)}" class="${n.via===v?'on':''}">${esc(v)}</button>`).join('')}</div></div>`:''}
+
  </div><div id="nDup"></div>
  <div class="grp" style="margin-top:14px"><label>תוויות</label><div class="seg" id="nLbWrap" style="gap:6px">${known.map(x=>`<button data-nlb="${esc(x)}" class="${(n.labels||[]).includes(x)?'on':''}" style="flex:none;min-width:0;height:38px">${esc(x)}</button>`).join('')}</div>
   <div class="nb"><input id="nLbNew" type="text" placeholder="תווית חדשה…"><button class="btn" id="nLbAdd" style="flex:none">הוסף</button></div></div>
@@ -790,13 +793,13 @@ function renderNew(){const n=NEW;const st=$('#nBody').scrollTop;
   <div class="grp"><label>כמה רציני</label><div class="hs">${S().heats.map(h=>{const lt=isLight(h.c);return`<button data-nheat="${esc(h.n)}" style="--hc:${lt?'#c3cfd5':h.c}" class="${n.heat===h.n?'on':''} ${lt?'lt':''}"><span class="dt"></span>${esc(h.n)}</button>`}).join('')}</div></div>
   <div class="grp"><label>שלב</label><div class="seg" id="nStage">${S().stages.map(x=>`<button data-nstage="${esc(x)}" class="${n.stage===x?'on':''}">${esc(x)}</button>`).join('')}</div></div>
  </section>`;
- $('#nBody').innerHTML=`<div class="dgrid">${per}${act}</div><datalist id="dlCity2">${allCities().map(c=>`<option value="${esc(c)}">`).join('')}</datalist>`;
+ $('#nBody').innerHTML=`${src}${per}${act}<datalist id="dlCity2">${allCities().map(c=>`<option value="${esc(c)}">`).join('')}</datalist>`;
  $('#nBody').scrollTop=st}
 function openNew(){NEW=newState();renderNew();openSheet('shNew','new')}
 const NB=$('#nBody');
 NB.addEventListener('click',e=>{const t=e.target;
  const a=t.closest('[data-nsrc]');if(a){NEW.source=a.dataset.nsrc;if(NEW.source!=='פנו אלינו')NEW.via='';renderNew();return}
- const v=t.closest('[data-nvia]');if(v){NEW.via=v.dataset.nvia;renderNew();setTimeout(()=>{const i=$('#nName');i&&i.focus()},30);return}
+ const v=t.closest('[data-nvia]');if(v){NEW.via=v.dataset.nvia;renderNew();return}
  const h=t.closest('[data-nheat]');if(h){NEW.heat=h.dataset.nheat;renderNew();return}
  if(t.closest('#nWaSame')){NEW.waSame=!NEW.waSame;renderNew();return}
  const nc=t.closest('[data-ncity]');if(nc){NEW.city=NEW.city===nc.dataset.ncity?'':nc.dataset.ncity;renderNew();return}
