@@ -544,7 +544,7 @@ function match(l,skip){
  return true}
 const facet=(g,v)=>DB.leads.reduce((n,l)=>n+(match(l,g.k)&&g.get(l).includes(v)?1:0),0);
 const activeCount=()=>GROUPS.reduce((n,g)=>n+F[g.k].size,0);
-const lw=s=>(String(s||"").trim().split(/\s+/).pop()||"");
+const lw=s=>(String(s||"").replace(/\([^)]*\)/g," ").trim().split(/\s+/).pop()||"");
 function sorted(arr){
  const m=$('#sort').value,c=(a,b)=>String(a).localeCompare(String(b),'he');
  const f={heat:(a,b)=>heatRank(a.heat)-heatRank(b.heat)||stageRank(b.stage)-stageRank(a.stage)||c(a.name,b.name),
