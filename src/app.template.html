@@ -838,7 +838,7 @@ function renderNew(){const n=NEW;const st=$('#nBody').scrollTop;
  </section>`;
  $('#nBody').innerHTML=`${src}${per}${act}<datalist id="dlCity2">${allCities().map(c=>`<option value="${esc(c)}">`).join('')}</datalist>`;
  $('#nBody').scrollTop=st}
-function openNew(){NEW=newState();renderNew();openSheet('shNew','new')}
+function openNew(){NEW=newState();renderNew();$('#nBody').scrollTop=0;openSheet('shNew','new');$('#nBody').scrollTop=0}
 const NB=$('#nBody');
 NB.addEventListener('click',e=>{const t=e.target;
  const a=t.closest('[data-nsrc]');if(a){NEW.source=a.dataset.nsrc;if(NEW.source!=='פנו אלינו')NEW.via='';renderNew();return}
