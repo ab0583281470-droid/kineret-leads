@@ -984,7 +984,7 @@ const telA=v=>v?`<a class="lk" href="tel:+${intlOf(v)}">${esc(v)}</a>`:'';
 const waA=v=>v?`<a class="lk wa" href="https://wa.me/${intlOf(v)}">${esc(v)}</a>`:'';
 const mailA=v=>v?`<a class="lk ml" href="mailto:${esc(v)}">${esc(v)}</a>`:'';
 const pCSS=land=>`@page{size:A4 ${land?'landscape':'portrait'};margin:9mm}
-*{box-sizing:border-box}html,body{margin:0}body{font-family:Heebo,"Segoe UI",Arial,sans-serif;color:#17252e;font-size:11px;line-height:1.4;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+*{box-sizing:border-box}html,body{margin:0}body{width:190mm;margin:0 auto;font-family:Heebo,"Segoe UI",Arial,sans-serif;color:#17252e;font-size:11px;line-height:1.4;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .band{background:linear-gradient(135deg,#0e3f4c,#071d26);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-radius:12px}
 .band img{height:48px}.band .t{text-align:center}.band h1{margin:0;font-size:20px}.band small{display:block;opacity:.8;font-size:11px}
 .fcs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 4px}
