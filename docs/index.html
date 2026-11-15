@@ -688,6 +688,31 @@ const cpBtn=(v,type)=>`<button class="cp" data-copy="${esc(v)}" ${type?`data-cty
 const crow=(cls,href,icon,label,val,go,type,extra)=>`<div class="crw"><a class="crow ${cls}" href="${href}"${extra||''}><span class="ci">${ic(icon)}</span><span class="t"><small>${label}</small><b>${esc(val)}</b></span><span class="go">${go}</span></a>${cpBtn(val,type)}</div>`;
 function contactRows(l){const t=telHref(l),w=waHref(l);
  return(t?crow('ph',t,'phone','טלפון',l.phone,'התקשר','tel'):'')+(w?crow('wa',w,'wa','וואצאפ',l.wa,'שלח הודעה','tel',' target="_blank" rel="noopener"'):'')+(l.phone2?crow('ph','tel:+'+intlOf(l.phone2),'phone','טלפון נוסף',l.phone2,'התקשר','tel'):'')+(l.email?crow('ml','mailto:'+esc(l.email),'mail','מייל',l.email,'כתוב',''):'')||`<div style="color:var(--mut);font-size:14px;margin-bottom:10px">אין עדיין פרטי קשר – אפשר להוסיף ב"פרטים אישיים"</div>`}
+/* ---------- suggest a task from note text ---------- */
+const TK_TRIGGER=/(לחזור|לחזר|נחזור|אחזור|נדבר שוב|לדבר שוב|ליצור קשר שוב|להתקשר שוב)/;
+const TK_NEG=/(לא לחזור|אל תחזור|לא צריך לחזור|אין צורך לחזור|כבר חזרתי)/;
+function suggestFromText(text){
+ const t=String(text||'');
+ if(!TK_TRIGGER.test(t)||TK_NEG.test(t))return null;
+ let m, days=null, label='';
+ if(/מחרתיים/.test(t)){days=2;label='מחרתיים'}
+ else if(/(?:^|[\s.,])מחר(?=[\s.,]|$)/.test(t)){days=1;label='מחר'}
+ else if(m=t.match(/(?:בעוד|עוד)\s+(\d+)\s+ימים/)){days=+m[1];label='בעוד '+days+' ימים'}
+ else if(/(?:בעוד|עוד)\s+יומיים|יומיים/.test(t)){days=2;label='בעוד יומיים'}
+ else if(m=t.match(/(?:בעוד|עוד)\s+(\d+)\s+שבועות/)){days=7*(+m[1]);label='בעוד '+m[1]+' שבועות'}
+ else if(/שבועיים/.test(t)){days=14;label='בעוד שבועיים'}
+ else if(/(?:בעוד|עוד|ב)?\s*שבוע\s+הבא|בשבוע\s+הבא|(?:בעוד|עוד)\s+שבוע(?=[\s.,]|$)/.test(t)){days=7;label='בעוד שבוע'}
+ else if(/חודש\s+הבא|בחודש\s+הבא|(?:בעוד|עוד)\s+חודש(?=[\s.,]|$)/.test(t)){days=30;label='בעוד חודש'}
+ if(days===null)return null;
+ return {date:addDays(days),label};
+}
+const isoToDM=iso=>{const [y,mo,d]=iso.split('-');return d+'/'+mo+'/'+y.slice(2)};
+function askTaskFromText(leadId,text){
+ const sg=suggestFromText(text);if(!sg||!leadId)return;
+ showDlg('נראה שתרצה לחזור אליו ('+sg.label+', '+isoToDM(sg.date)+'). להוסיף משימה?',[
+  ['הוסף משימה','',()=>{addTask(leadId,'לחזור אליו',sg.date);renderBadge();if(page==='tasks')renderTasks();toast('נוספה משימה ל-'+isoToDM(sg.date))}],
+  ['לא עכשיו','',()=>{}]]);
+}
 const dateChip=()=>`<span class="qdate"><input class="qdt" type="text" dir="ltr" inputmode="numeric" placeholder="dd/mm/yy" aria-label="הקלידו תאריך"><button type="button" class="qcal" data-dcal aria-label="בחירה מלוח שנה">${ic('cal',16)}</button><input class="qdh" type="date" tabindex="-1" aria-hidden="true"></span>`;
 function parseDM(v){v=String(v||'').trim();if(!v)return '';if(/^\d{6}$|^\d{8}$/.test(v))v=v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4);const m=v.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2}|\d{4})$/);if(!m)return null;const d=+m[1],mo=+m[2];let y=+m[3];if(m[3].length===2)y+=2000;const dt=new Date(y,mo-1,d);if(dt.getFullYear()!==y||dt.getMonth()!==mo-1||dt.getDate()!==d)return null;return y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
 function openDatePicker(btn){const di=btn.parentElement.querySelector('.qdh');try{di.showPicker()}catch(_){di.focus();di.click()}}
@@ -762,8 +787,10 @@ D.addEventListener('click',e=>{const l=draft;if(!l)return;const t=e.target;
 });
 function saveLead(){
  if(!draft)return;const d=draft;
+ const o0=DB.leads.find(x=>x.id===d.id);
+ const sTxt=o0?((d.status!==o0.status)?d.status:'')+' '+(d.history||[]).slice((o0.history||[]).length).map(h=>h.text).join(' '):'';
  if(jstr(d)!==snapStr){act('עריכת ליד: '+(d.name||''),()=>{d.updated=new Date().toISOString();const i=DB.leads.findIndex(x=>x.id===d.id);if(i>=0)DB.leads[i]=JSON.parse(jstr(d));(d.labels||[]).forEach(x=>{if(!S().labels.includes(x))S().labels.push(x)})})}
- closeSheet()}
+ closeSheet();askTaskFromText(d.id,sTxt)}
 $('#lSave').onclick=saveLead;$('#lCancel').onclick=()=>{if(isDirty())askCloseDiscard();else closeSheet()};
 function askCloseDiscard(){showDlg('לבטל את השינויים?',[['כן, בטל שינויים','danger',()=>closeSheet()],['המשך עריכה','',()=>{}]])}
 $('#dBody').addEventListener('click',e=>{if(e.target.closest('#dDelete'))deleteLead()});
@@ -835,10 +862,12 @@ function addPendingTask(title,date){NEW.tasks=NEW.tasks||[];NEW.tasks.push({titl
 NB.addEventListener('change',e=>{const el=e.target;if(!el.closest||!el.closest('.qdate'))return;const v=el.classList.contains('qdh')?(el.value||''):parseDM(el.value);if(v===null){toast('התאריך לא תקין. כתבו כך: dd/mm/yy');return}if(v)addPendingTask($('#nTkTitle').value,v)});
 function saveNew(more){const n=NEW;if(!n.source){toast('בחרו קודם: פנו אלינו / בעלי יכולת');return}
  if(!n.name.trim()&&!n.phone.trim()&&!n.email.trim()){toast('נא למלא שם, טלפון או מייל');return}
+ const nTxt=(n.status||'')+' '+(n.history||[]).map(h=>h.text).join(' ');
  const l={id:uid('L'),name:n.name.trim()||n.phone||n.email,alias:'',source:n.source,via:n.via,phone:n.phone.trim(),phone2:n.phone2.trim(),wa:(n.waSame?n.phone:n.wa).trim(),email:n.email.trim(),city:n.city.trim(),address:n.address.trim(),community:n.community.trim(),age:n.age.trim(),heat:n.heat,stage:n.stage||(n.status.trim()?'שוחחנו':'חדש'),status:n.status.trim(),about:n.about.trim(),labels:[...(n.labels||[])],history:[...(n.history||[])],lastContact:n.lastContact||'',created:new Date().toISOString(),updated:new Date().toISOString()};
  act('הוספת ליד: '+l.name,()=>{DB.leads.push(l);(l.labels||[]).forEach(x=>{if(!S().labels.includes(x))S().labels.push(x)});(n.tasks||[]).forEach(x=>DB.tasks.push({id:uid('T'),leadId:l.id,title:x.title,date:x.date||'',done:false,created:new Date().toISOString()}))});
  if(more){const keep={source:n.source,via:n.via};NEW=Object.assign(newState(),keep);renderNew();setTimeout(()=>{const i=$('#nName');i&&i.focus()},30);render()}
- else{NEW=null;closeSheet()}}
+ else{NEW=null;closeSheet()}
+ askTaskFromText(l.id,nTxt)}
 $('#nSave').onclick=()=>saveNew(false);$('#nSaveMore').onclick=()=>saveNew(true);$('#nCancel').onclick=requestClose;
 $('#fab').onclick=openNew;$('#btnNew').onclick=openNew;
 /* ---------- tasks page ---------- */
