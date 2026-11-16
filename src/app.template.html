@@ -689,7 +689,7 @@ const crow=(cls,href,icon,label,val,go,type,extra)=>`<div class="crw"><a class="
 function contactRows(l){const t=telHref(l),w=waHref(l);
  return(t?crow('ph',t,'phone','טלפון',l.phone,'התקשר','tel'):'')+(w?crow('wa',w,'wa','וואצאפ',l.wa,'שלח הודעה','tel',' target="_blank" rel="noopener"'):'')+(l.phone2?crow('ph','tel:+'+intlOf(l.phone2),'phone','טלפון נוסף',l.phone2,'התקשר','tel'):'')+(l.email?crow('ml','mailto:'+esc(l.email),'mail','מייל',l.email,'כתוב',''):'')||`<div style="color:var(--mut);font-size:14px;margin-bottom:10px">אין עדיין פרטי קשר – אפשר להוסיף ב"פרטים אישיים"</div>`}
 /* ---------- suggest a task from note text ---------- */
-const TK_WORDS=['בקשר','לחזור','לחזר','נחזור','אחזור','תחזור','לשלוח','אשלח','נשלח','תשלח','להעביר','אעביר','נעביר','תעביר','לבדוק','אבדוק','נבדוק','תבדוק','לבחון','אבחן','נבחן','תבחן','לתאם','נתאם','אתאם','תתאם','להתקשר','אתקשר','נתקשר','תתקשר','לעדכן','אעדכן','נעדכן','תעדכן','לדבר','נדבר','אדבר','תדבר','לברר','אברר','נברר','תברר','להזכיר','אזכיר','נזכיר','לפנות','אפנה','נפנה','לקבוע','נקבע','אקבע','להמשיך','אמשיך','נמשיך'];
+const TK_WORDS=['בקשר','לחזור','לחזר','נחזור','אחזור','תחזור','לשלוח','אשלח','תשלח','להעביר','אעביר','נעביר','תעביר','לבדוק','אבדוק','נבדוק','תבדוק','לבחון','אבחן','נבחן','תבחן','לתאם','נתאם','אתאם','תתאם','להתקשר','אתקשר','נתקשר','תתקשר','לעדכן','אעדכן','נעדכן','תעדכן','לדבר','נדבר','אדבר','תדבר','לברר','אברר','נברר','תברר','להזכיר','אזכיר','נזכיר','לפנות','אפנה','נפנה','לקבוע','נקבע','אקבע','להמשיך','אמשיך','נמשיך'];
 const TK_VERB_RE=new RegExp('(?:^|[\\s,.;:!?()"\'\\-])[ול]?(?:'+TK_WORDS.join('|')+')(?=$|[\\s,.;:!?()"\'\\-])');
 const TK_NEG=/(לא\s+(?:צריך\s+|חייב\s+)?ל(?:חזור|שלוח|העביר|בדוק|בחון|דבר|התקשר|עדכן|היות\s+בקשר|ברר|הזכיר|פנות|קבוע)|אין\s+צורך|כבר\s+(?:חזרתי|שלחתי|העברתי|בדקתי|בחנתי|דיברתי|עדכנתי|התקשרתי|תיאמתי|בררתי))/;
 function suggestFromText(text){
@@ -706,9 +706,12 @@ function suggestFromText(text){
  else if(m=t.match(/(?:בעוד|עוד)\s+(\d+)\s+שבועות/)){days=7*(+m[1]);label='בעוד '+m[1]+' שבועות'}
  else if(/שבועיים/.test(t)){days=14;label='בעוד שבועיים'}
  else if(/שבוע\s+הבא|בשבוע\s+הבא|(?:בעוד|עוד)\s+שבוע(?=[\s.,]|$)/.test(t)){days=7;label='בעוד שבוע'}
+ else if(/(?:בעוד|עוד)\s+חודשיים|(?:^|[\s.,])חודשיים(?=[\s.,]|$)/.test(t)){days=60;label='בעוד חודשיים'}
  else if(/חודש\s+הבא|בחודש\s+הבא|(?:בעוד|עוד)\s+חודש(?=[\s.,]|$)/.test(t)){days=30;label='בעוד חודש'}
  return {date:days===null?'':addDays(days),label,title};
 }
+const tkSents=x=>String(x||'').split(/[.!?\n]+/).map(y=>y.trim()).filter(Boolean);
+const tkNewPart=(oldS,newS)=>{const o=new Set(tkSents(oldS));return tkSents(newS).filter(y=>!o.has(y)).join('. ')};
 const isoToDM=iso=>{const [y,mo,d]=iso.split('-');return d+'/'+mo+'/'+y.slice(2)};
 function askTaskFromText(leadId,text){
  const sg=suggestFromText(text);if(!sg||!leadId)return;
@@ -792,7 +795,7 @@ D.addEventListener('click',e=>{const l=draft;if(!l)return;const t=e.target;
 function saveLead(){
  if(!draft)return;const d=draft;
  const o0=DB.leads.find(x=>x.id===d.id);
- const sTxt=o0?((d.status!==o0.status)?d.status:'')+' '+(d.history||[]).slice((o0.history||[]).length).map(h=>h.text).join(' '):'';
+ const sTxt=(o0&&jstr(d)!==snapStr)?tkNewPart(o0.status,d.status)+' '+(d.history||[]).slice((o0.history||[]).length).map(h=>h.text).join(' '):'';
  if(jstr(d)!==snapStr){act('עריכת ליד: '+(d.name||''),()=>{d.updated=new Date().toISOString();const i=DB.leads.findIndex(x=>x.id===d.id);if(i>=0)DB.leads[i]=JSON.parse(jstr(d));(d.labels||[]).forEach(x=>{if(!S().labels.includes(x))S().labels.push(x)})})}
  closeSheet();askTaskFromText(d.id,sTxt)}
 $('#lSave').onclick=saveLead;$('#lCancel').onclick=()=>{if(isDirty())askCloseDiscard();else closeSheet()};
