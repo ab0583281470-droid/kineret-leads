@@ -990,7 +990,7 @@ function filterChipsHTML(all){
 const telA=v=>v?`<a class="lk" href="tel:+${intlOf(v)}">${esc(v)}</a>`:'';
 const waA=v=>v?`<a class="lk wa" href="https://wa.me/${intlOf(v)}">${esc(v)}</a>`:'';
 const mailA=v=>v?`<a class="lk ml" href="mailto:${esc(v)}">${esc(v)}</a>`:'';
-const pCSS=land=>`@page{size:A4 ${land?'landscape':'portrait'};margin:9mm}
+const pCSS=land=>`@page{size:${land?'297mm 210mm':'210mm 297mm'};margin:9mm}
 *{box-sizing:border-box}html,body{margin:0}body{width:${land?"auto":"190mm"};margin:0 ${land?"0":"auto"};font-family:Heebo,"Segoe UI",Arial,sans-serif;color:#17252e;font-size:11px;line-height:1.4;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .band{background:linear-gradient(135deg,#0e3f4c,#071d26);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-radius:12px}
 .band img{height:48px}.band .t{text-align:center}.band h1{margin:0;font-size:20px}.band small{display:block;opacity:.8;font-size:11px}
@@ -1023,11 +1023,11 @@ const listCSS=`.tk{color:#9a5b00}
 .tb tr{page-break-inside:avoid}.tb thead{display:table-header-group}`;
 const listTasks=l=>openTasks(l.id).map(t=>`<div class="sm tk">▸ ${esc(t.title)}${t.date?' ('+dueInfo(t.date).t+')':''}</div>`).join('');
 const listTable=arr=>`<table class="tb"><thead><tr><th style="width:19%">שם</th><th style="width:9%">מקור</th><th style="width:10%">רצינות / שלב</th><th style="width:18%">פרטי קשר</th><th>סטטוס ועל האיש</th></tr></thead><tbody>${arr.map((l,i)=>`<tr><td class="n" style="--c:${heatCol(l.heat)}">${i+1}. ${esc(l.name)}${l.age?` <small>· ${esc(l.age)}</small>`:''}<div class="g sm" style="font-weight:500">${esc([l.city,l.community].filter(Boolean).join(' · '))}</div></td><td>${esc(l.source)}${l.via?`<div class="g sm">${esc(l.via)}</div>`:''}</td><td>${pPill(l.heat)}<div class="sm" style="margin-top:2px">${esc(l.stage)}</div></td><td class="ltr">${telA(l.phone)}${l.wa?`<div class="sm">${waA(l.wa)}</div>`:''}${l.phone2?`<div class="sm">${telA(l.phone2)}</div>`:''}${l.email?`<div class="sm">${mailA(l.email)}</div>`:''}</td><td>${l.status?esc(l.status):''}${l.about?`<div class="g sm">${esc(l.about)}</div>`:''}${listTasks(l)}</td></tr>`).join('')}</tbody></table>`;
-/* תמיד לרוחב מלא של הדף (A4 landscape). אם דפדפן הנייד מציג לאורך – הטבלה נמתחת לרוחב הדף בכל מקרה. */
+/* A4 לאורך (portrait): הטבלה ברוחב הדף, ושורות נכנסות יותר לכל עמוד. */
 function exportListPDF(all,orient){
  const arr=all?sorted(DB.leads.slice()):sorted(DB.leads.filter(l=>match(l)));
  const now=new Date().toLocaleDateString('he-IL',{day:'numeric',month:'long',year:'numeric'});
- const land=true;
+ const land=false;
  printHTML(`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>דוח לידים</title><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet"><style>${pCSS(land)}${listCSS}</style></head><body>
  ${pHead('דוח לידים – מצפה כנרת',now+' · '+arr.length+' לידים')}
  <div class="fcs">${filterChipsHTML(all)}</div>
