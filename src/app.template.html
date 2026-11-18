@@ -991,14 +991,14 @@ const telA=v=>v?`<a class="lk" href="tel:+${intlOf(v)}">${esc(v)}</a>`:'';
 const waA=v=>v?`<a class="lk wa" href="https://wa.me/${intlOf(v)}">${esc(v)}</a>`:'';
 const mailA=v=>v?`<a class="lk ml" href="mailto:${esc(v)}">${esc(v)}</a>`:'';
 const pCSS=land=>`@page{size:A4 ${land?'landscape':'portrait'};margin:9mm}
-*{box-sizing:border-box}html,body{margin:0}body{width:190mm;margin:0 auto;font-family:Heebo,"Segoe UI",Arial,sans-serif;color:#17252e;font-size:11px;line-height:1.4;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+*{box-sizing:border-box}html,body{margin:0}body{width:${land?"auto":"190mm"};margin:0 ${land?"0":"auto"};font-family:Heebo,"Segoe UI",Arial,sans-serif;color:#17252e;font-size:11px;line-height:1.4;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .band{background:linear-gradient(135deg,#0e3f4c,#071d26);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-radius:12px}
 .band img{height:48px}.band .t{text-align:center}.band h1{margin:0;font-size:20px}.band small{display:block;opacity:.8;font-size:11px}
 .fcs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 4px}
 .fc{display:inline-flex;align-items:center;gap:6px;background:#e3f3f5;color:#0f5b66;border-radius:99px;padding:6px 15px;font-size:14px;font-weight:700}
 .fc small{font-size:12.5px;font-weight:500;opacity:.8}.fc i{width:11px;height:11px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.2)}
 .fc.q{background:#fff3e0;color:#8a5a00}.fc.all{background:#eef2f4;color:#44525b}
-a.lk{color:#0f5b66;text-decoration:none;border-bottom:1px dotted #0f5b66}a.lk.wa{color:#1a8f48;border-color:#1a8f48}a.lk.ml{color:#8a6410;border-color:#8a6410}
+a.lk{color:#0f5b66;text-decoration:none}a.lk.wa{color:#1a8f48}a.lk.ml{color:#8a6410}
 .p{display:inline-block;border-radius:6px;padding:1px 8px;font-weight:700;font-size:10.5px;white-space:nowrap}
 .lt{border:1.5px solid #c3cfd5}
 table{width:100%;border-collapse:collapse;margin-top:8px}
@@ -1012,12 +1012,7 @@ td.n small{font-weight:500;color:#66767f}
 .ft{margin-top:10px;color:#8a979f;font-size:10px;text-align:center}`;
 const pHead=(title,sub)=>`<div class="band"><img src="${LOGO_S}"><div class="t"><h1>${esc(title)}</h1><small>${esc(sub)}</small></div><img src="${LOGO_K}"></div>`;
 const pPill=n=>{const h=heatObj(n),l=isLight(h.c);return`<span class="p ${l?'lt':''}" style="background:${l?'#fff':h.c};color:${l?'#17252e':'#fff'}">${esc(n)}</span>`};
-const listCSS=`/* דף לאורך (פלאפון): בלוק קומפקטי לכל ליד */
-.ld{border:1px solid #e2e8eb;border-inline-start:4px solid var(--c);border-radius:6px;padding:4px 8px;margin:3px 0;page-break-inside:avoid;break-inside:avoid}
-.l1{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}.nm{font-weight:800;font-size:11.5px}.nm small{font-weight:500;color:#66767f;font-size:9.5px}
-.pl{display:flex;gap:3px;flex-wrap:wrap}.pl .p{font-size:9.5px;padding:0 6px}.p.sr{background:#eef2f4;color:#44525b}
-.l2{margin:2px 0 1px;font-size:10px;direction:ltr;text-align:right}.l2 a.lk{border-bottom-width:1px}.l2 a.lk:not(.wa):not(.ml){font-size:12.5px;font-weight:800;letter-spacing:.2px}.l2 a.lk.wa{font-size:11px;font-weight:700}.dv{color:#b8c4ca;margin:0 5px}
-.l3{font-size:10px;line-height:1.35}.tk{color:#9a5b00}
+const listCSS=`.tk{color:#9a5b00}
 /* דף לרוחב (מחשב): טבלה צפופה */
 .tb{width:100%;border-collapse:collapse;margin-top:6px}
 .tb th{padding:5px 7px;font-size:10px;background:#eef2f4;color:#44525b;text-align:right}
@@ -1027,21 +1022,16 @@ const listCSS=`/* דף לאורך (פלאפון): בלוק קומפקטי לכל
 .tb .ltr a.lk:not(.wa):not(.ml){font-size:12.5px;font-weight:800}.tb .ltr a.lk.wa{font-size:10.5px}.tb .ltr .sm{font-size:9.5px}
 .tb tr{page-break-inside:avoid}.tb thead{display:table-header-group}`;
 const listTasks=l=>openTasks(l.id).map(t=>`<div class="sm tk">▸ ${esc(t.title)}${t.date?' ('+dueInfo(t.date).t+')':''}</div>`).join('');
-const listBlocks=arr=>arr.map((l,i)=>{
- const contacts=[l.phone?telA(l.phone):'',l.wa?`<span class="sm g">WA</span> ${waA(l.wa)}`:'',l.phone2?telA(l.phone2):'',l.email?mailA(l.email):''].filter(Boolean).join('<span class="dv">·</span>');
- const meta=[l.age,l.city,l.community].filter(Boolean).join(' · ');
- const txt=[l.status,l.about?'<span class="g">'+esc(l.about)+'</span>':''].filter(Boolean);
- return`<div class="ld" style="--c:${heatCol(l.heat)}"><div class="l1"><span class="nm">${i+1}. ${esc(l.name)}${meta?` <small>· ${esc(meta)}</small>`:''}</span><span class="pl">${pPill(l.heat)}<span class="p lt" style="background:#fff">${esc(l.stage)}</span><span class="p sr">${esc(l.source)}${l.via?' · '+esc(l.via):''}</span></span></div>${contacts?`<div class="l2">${contacts}</div>`:''}${txt.length?`<div class="l3">${txt.map((x,j)=>j?x:esc(x)).join(' · ')}</div>`:''}${listTasks(l)}</div>`}).join('');
-const listTable=arr=>`<table class="tb"><thead><tr><th style="width:20%">שם</th><th style="width:8%">מקור</th><th style="width:11%">רצינות / שלב</th><th style="width:16%">פרטי קשר</th><th>סטטוס ועל האיש</th></tr></thead><tbody>${arr.map((l,i)=>`<tr><td class="n" style="--c:${heatCol(l.heat)}">${i+1}. ${esc(l.name)}${l.age?` <small>· ${esc(l.age)}</small>`:''}<div class="g sm" style="font-weight:500">${esc([l.city,l.community].filter(Boolean).join(' · '))}</div></td><td>${esc(l.source)}${l.via?`<div class="g sm">${esc(l.via)}</div>`:''}</td><td>${pPill(l.heat)}<div class="sm" style="margin-top:2px">${esc(l.stage)}</div></td><td class="ltr">${telA(l.phone)}${l.wa?`<div class="sm">${waA(l.wa)}</div>`:''}${l.phone2?`<div class="sm">${telA(l.phone2)}</div>`:''}${l.email?`<div class="sm">${mailA(l.email)}</div>`:''}</td><td>${l.status?esc(l.status):''}${l.about?`<div class="g sm">${esc(l.about)}</div>`:''}${listTasks(l)}</td></tr>`).join('')}</tbody></table>`;
-/* במחשב: טבלה לרוחב הדף (דפדפן שולחני מכבד את גודל הדף). בפלאפון: דף לאורך, כי דפדפן הנייד מתעלם מהוראת "לרוחב". */
+const listTable=arr=>`<table class="tb"><thead><tr><th style="width:19%">שם</th><th style="width:9%">מקור</th><th style="width:10%">רצינות / שלב</th><th style="width:18%">פרטי קשר</th><th>סטטוס ועל האיש</th></tr></thead><tbody>${arr.map((l,i)=>`<tr><td class="n" style="--c:${heatCol(l.heat)}">${i+1}. ${esc(l.name)}${l.age?` <small>· ${esc(l.age)}</small>`:''}<div class="g sm" style="font-weight:500">${esc([l.city,l.community].filter(Boolean).join(' · '))}</div></td><td>${esc(l.source)}${l.via?`<div class="g sm">${esc(l.via)}</div>`:''}</td><td>${pPill(l.heat)}<div class="sm" style="margin-top:2px">${esc(l.stage)}</div></td><td class="ltr">${telA(l.phone)}${l.wa?`<div class="sm">${waA(l.wa)}</div>`:''}${l.phone2?`<div class="sm">${telA(l.phone2)}</div>`:''}${l.email?`<div class="sm">${mailA(l.email)}</div>`:''}</td><td>${l.status?esc(l.status):''}${l.about?`<div class="g sm">${esc(l.about)}</div>`:''}${listTasks(l)}</td></tr>`).join('')}</tbody></table>`;
+/* תמיד לרוחב מלא של הדף (A4 landscape). אם דפדפן הנייד מציג לאורך – הטבלה נמתחת לרוחב הדף בכל מקרה. */
 function exportListPDF(all,orient){
  const arr=all?sorted(DB.leads.slice()):sorted(DB.leads.filter(l=>match(l)));
  const now=new Date().toLocaleDateString('he-IL',{day:'numeric',month:'long',year:'numeric'});
- const land=orient?orient==='land':innerWidth>=1000;
+ const land=true;
  printHTML(`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>דוח לידים</title><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet"><style>${pCSS(land)}${listCSS}</style></head><body>
  ${pHead('דוח לידים – מצפה כנרת',now+' · '+arr.length+' לידים')}
  <div class="fcs">${filterChipsHTML(all)}</div>
- ${land?listTable(arr):listBlocks(arr)}<div class="ft">מצפה כנרת · שפר נדל״ן – שיווק וניהול</div></body></html>`,all?'':filterFileName());
+ ${listTable(arr)}<div class="ft">מצפה כנרת · שפר נדל״ן – שיווק וניהול</div></body></html>`,all?'':filterFileName());
  toast('נפתח חלון הדפסה – בחרו "שמור כ-PDF"')}
 function exportLeadPDF(l){
  const tasks=DB.tasks.filter(t=>t.leadId===l.id&&!t.done),hist=(l.history||[]);
