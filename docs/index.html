@@ -1012,23 +1012,36 @@ td.n small{font-weight:500;color:#66767f}
 .ft{margin-top:10px;color:#8a979f;font-size:10px;text-align:center}`;
 const pHead=(title,sub)=>`<div class="band"><img src="${LOGO_S}"><div class="t"><h1>${esc(title)}</h1><small>${esc(sub)}</small></div><img src="${LOGO_K}"></div>`;
 const pPill=n=>{const h=heatObj(n),l=isLight(h.c);return`<span class="p ${l?'lt':''}" style="background:${l?'#fff':h.c};color:${l?'#17252e':'#fff'}">${esc(n)}</span>`};
-const listCSS=`.ld{border:1px solid #e2e8eb;border-inline-start:5px solid var(--c);border-radius:8px;padding:7px 10px;margin:6px 0;page-break-inside:avoid;break-inside:avoid}
-.l1{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.nm{font-weight:800;font-size:12.5px}.nm small{font-weight:500;color:#66767f}
-.pl{display:flex;gap:4px;flex-wrap:wrap}.p.sr{background:#eef2f4;color:#44525b}
-.l2{margin:4px 0;font-size:11px;direction:ltr;text-align:right}.l2 a.lk{border-bottom-width:1.5px}.l2 a.lk:not(.wa):not(.ml){font-size:14.5px;font-weight:800;letter-spacing:.3px}.l2 a.lk.wa{font-size:12.5px;font-weight:700}.dv{color:#b8c4ca;margin:0 6px}
-.l3{margin-top:3px;font-size:11px}.tk{color:#9a5b00}`;
-function exportListPDF(all){
+const listCSS=`/* דף לאורך (פלאפון): בלוק קומפקטי לכל ליד */
+.ld{border:1px solid #e2e8eb;border-inline-start:4px solid var(--c);border-radius:6px;padding:4px 8px;margin:3px 0;page-break-inside:avoid;break-inside:avoid}
+.l1{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}.nm{font-weight:800;font-size:11.5px}.nm small{font-weight:500;color:#66767f;font-size:9.5px}
+.pl{display:flex;gap:3px;flex-wrap:wrap}.pl .p{font-size:9.5px;padding:0 6px}.p.sr{background:#eef2f4;color:#44525b}
+.l2{margin:2px 0 1px;font-size:10px;direction:ltr;text-align:right}.l2 a.lk{border-bottom-width:1px}.l2 a.lk:not(.wa):not(.ml){font-size:12.5px;font-weight:800;letter-spacing:.2px}.l2 a.lk.wa{font-size:11px;font-weight:700}.dv{color:#b8c4ca;margin:0 5px}
+.l3{font-size:10px;line-height:1.35}.tk{color:#9a5b00}
+/* דף לרוחב (מחשב): טבלה צפופה */
+.tb{width:100%;border-collapse:collapse;margin-top:6px}
+.tb th{padding:5px 7px;font-size:10px;background:#eef2f4;color:#44525b;text-align:right}
+.tb td{padding:3.5px 7px;font-size:10px;line-height:1.35;vertical-align:top;border-bottom:1px solid #e2e8eb}
+.tb td.n{border-inline-start:4px solid var(--c);font-weight:800;font-size:11px}
+.tb td.n small{font-weight:500;color:#66767f;font-size:9.5px}
+.tb .ltr a.lk:not(.wa):not(.ml){font-size:12.5px;font-weight:800}.tb .ltr a.lk.wa{font-size:10.5px}.tb .ltr .sm{font-size:9.5px}
+.tb tr{page-break-inside:avoid}.tb thead{display:table-header-group}`;
+const listTasks=l=>openTasks(l.id).map(t=>`<div class="sm tk">▸ ${esc(t.title)}${t.date?' ('+dueInfo(t.date).t+')':''}</div>`).join('');
+const listBlocks=arr=>arr.map((l,i)=>{
+ const contacts=[l.phone?telA(l.phone):'',l.wa?`<span class="sm g">WA</span> ${waA(l.wa)}`:'',l.phone2?telA(l.phone2):'',l.email?mailA(l.email):''].filter(Boolean).join('<span class="dv">·</span>');
+ const meta=[l.age,l.city,l.community].filter(Boolean).join(' · ');
+ const txt=[l.status,l.about?'<span class="g">'+esc(l.about)+'</span>':''].filter(Boolean);
+ return`<div class="ld" style="--c:${heatCol(l.heat)}"><div class="l1"><span class="nm">${i+1}. ${esc(l.name)}${meta?` <small>· ${esc(meta)}</small>`:''}</span><span class="pl">${pPill(l.heat)}<span class="p lt" style="background:#fff">${esc(l.stage)}</span><span class="p sr">${esc(l.source)}${l.via?' · '+esc(l.via):''}</span></span></div>${contacts?`<div class="l2">${contacts}</div>`:''}${txt.length?`<div class="l3">${txt.map((x,j)=>j?x:esc(x)).join(' · ')}</div>`:''}${listTasks(l)}</div>`}).join('');
+const listTable=arr=>`<table class="tb"><thead><tr><th style="width:20%">שם</th><th style="width:8%">מקור</th><th style="width:11%">רצינות / שלב</th><th style="width:16%">פרטי קשר</th><th>סטטוס ועל האיש</th></tr></thead><tbody>${arr.map((l,i)=>`<tr><td class="n" style="--c:${heatCol(l.heat)}">${i+1}. ${esc(l.name)}${l.age?` <small>· ${esc(l.age)}</small>`:''}<div class="g sm" style="font-weight:500">${esc([l.city,l.community].filter(Boolean).join(' · '))}</div></td><td>${esc(l.source)}${l.via?`<div class="g sm">${esc(l.via)}</div>`:''}</td><td>${pPill(l.heat)}<div class="sm" style="margin-top:2px">${esc(l.stage)}</div></td><td class="ltr">${telA(l.phone)}${l.wa?`<div class="sm">${waA(l.wa)}</div>`:''}${l.phone2?`<div class="sm">${telA(l.phone2)}</div>`:''}${l.email?`<div class="sm">${mailA(l.email)}</div>`:''}</td><td>${l.status?esc(l.status):''}${l.about?`<div class="g sm">${esc(l.about)}</div>`:''}${listTasks(l)}</td></tr>`).join('')}</tbody></table>`;
+/* במחשב: טבלה לרוחב הדף (דפדפן שולחני מכבד את גודל הדף). בפלאפון: דף לאורך, כי דפדפן הנייד מתעלם מהוראת "לרוחב". */
+function exportListPDF(all,orient){
  const arr=all?sorted(DB.leads.slice()):sorted(DB.leads.filter(l=>match(l)));
  const now=new Date().toLocaleDateString('he-IL',{day:'numeric',month:'long',year:'numeric'});
- const rows=arr.map((l,i)=>{
-  const contacts=[l.phone?telA(l.phone):'',l.wa?`<span class="sm g">WA</span> ${waA(l.wa)}`:'',l.phone2?telA(l.phone2):'',l.email?mailA(l.email):''].filter(Boolean).join('<span class="dv">·</span>');
-  const tasks=openTasks(l.id).map(t=>`<div class="sm tk">▸ ${esc(t.title)}${t.date?' ('+dueInfo(t.date).t+')':''}</div>`).join('');
-  const meta=[l.city,l.community].filter(Boolean).join(' · ');
-  return`<div class="ld" style="--c:${heatCol(l.heat)}"><div class="l1"><span class="nm">${i+1}. ${esc(l.name)}${l.age?` <small>· ${esc(l.age)}</small>`:''}</span><span class="pl">${pPill(l.heat)}<span class="p lt" style="background:#fff">${esc(l.stage)}</span><span class="p sr">${esc(l.source)}${l.via?' · '+esc(l.via):''}</span></span></div>${meta?`<div class="g sm">${esc(meta)}</div>`:''}${contacts?`<div class="l2">${contacts}</div>`:''}${l.status?`<div class="l3">${esc(l.status)}</div>`:''}${l.about?`<div class="g sm">${esc(l.about)}</div>`:''}${tasks}</div>`}).join('');
- printHTML(`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>דוח לידים</title><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet"><style>${pCSS(false)}${listCSS}</style></head><body>
+ const land=orient?orient==='land':innerWidth>=1000;
+ printHTML(`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>דוח לידים</title><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet"><style>${pCSS(land)}${listCSS}</style></head><body>
  ${pHead('דוח לידים – מצפה כנרת',now+' · '+arr.length+' לידים')}
  <div class="fcs">${filterChipsHTML(all)}</div>
- ${rows}<div class="ft">מצפה כנרת · שפר נדל״ן – שיווק וניהול</div></body></html>`,all?'':filterFileName());
+ ${land?listTable(arr):listBlocks(arr)}<div class="ft">מצפה כנרת · שפר נדל״ן – שיווק וניהול</div></body></html>`,all?'':filterFileName());
  toast('נפתח חלון הדפסה – בחרו "שמור כ-PDF"')}
 function exportLeadPDF(l){
  const tasks=DB.tasks.filter(t=>t.leadId===l.id&&!t.done),hist=(l.history||[]);
