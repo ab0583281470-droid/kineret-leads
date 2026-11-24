@@ -105,6 +105,7 @@ svg.i{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-l
 .c-st{font-size:14.5px;overflow-wrap:anywhere;white-space:pre-line}
 .c-ab{margin-top:2px;font-size:13px;color:var(--mut);overflow-wrap:anywhere}
 .c-ab svg{margin-inline-end:4px}
+.c-jr{margin-top:3px;font-size:13px;color:var(--teal-d);overflow-wrap:anywhere}
 .lb{font-size:11.5px;background:#fff;border:1px solid var(--line);border-radius:99px;padding:0 8px;color:var(--mut)}
 .tk{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;border-radius:8px;padding:2px 8px;background:#fff3e0;color:#9a5b00;max-width:100%}
 .tk.late{background:#fee2e2;color:#b91c1c}
@@ -580,13 +581,15 @@ window.addEventListener('hashchange',()=>{if(!cur&&Date.now()>ignoreHashUntil){a
 const telHref=l=>l.phone?'tel:+'+intlOf(l.phone):'';
 const waHref=l=>{if(!l.wa)return'';const t=S().waTemplate,fn=String(l.name||'').replace(/^(הר"ר|הרה"ג ר'|הרה"ג|הרב|ר')\s+/,'').split(' ')[0];return'https://wa.me/'+intlOf(l.wa)+(t?'?text='+encodeURIComponent(t.replace(/\{שם\}/g,fn)):'')};
 const sourcePill=l=>l.source==='פנו אלינו'?`<span class="sp in">${ic('inn',13)} פנו אלינו${l.via?' · '+esc(l.via):''}</span>`:`<span class="sp out">${ic('out',13)} בעלי יכולת</span>`;
+const JVIEW={get(){try{return localStorage.getItem('crm-kineret-jview')==='1'}catch(e){return false}},set(v){try{localStorage.setItem('crm-kineret-jview',v?'1':'0')}catch(e){}}};
 function card(l){
+ const jl=JVIEW.get()&&(l.history||[]).length?l.history[l.history.length-1]:null;
  const tk=nextTask(l.id),ti=tk?dueInfo(tk.date):null,n=openTasks(l.id).length;
  const t=telHref(l),w=waHref(l);
  return`<article class="card" data-id="${l.id}" style="--hc:${heatCol(l.heat)}">
  <div class="c-main"><div class="c-top"><div class="c-name">${esc(l.name||'ללא שם')}${l.age?` <small>· ${esc(l.age)}</small>`:''}</div><span class="stg s-${esc(l.stage).replace(/ /g,'-')}">${esc(l.stage)}</span></div>
  <div class="c-badges">${sourcePill(l)}${hpill(l.heat)}${l.city?`<span class="cm">${ic('pin',12)}${esc(l.city)}</span>`:''}${l.community?`<span class="cm">${esc(l.community)}</span>`:''}</div></div>
- <div class="c-text">${l.status?`<div class="c-st">${esc(l.status)}</div>`:''}${l.about?`<div class="c-ab">${ic('user',12)}${esc(l.about)}</div>`:''}</div>
+ <div class="c-text">${l.status?`<div class="c-st">${esc(l.status)}</div>`:''}${l.about?`<div class="c-ab">${ic('user',12)}${esc(l.about)}</div>`:''}${jl?`<div class="c-jr">${ic('check',12)} ${jl.t?fmtDT(jl.t)+' · ':''}${esc(jl.text)}</div>`:''}</div>
  <div class="c-info">${tk?`<span class="tk ${ti.c==='late'?'late':''}">${ic('tasks',12)} ${esc(tk.title.slice(0,24))} · ${ti.t}${n>1?' +'+(n-1):''}</span>`:''}${(l.labels||[]).slice(0,3).map(x=>`<span class="lb">${esc(x)}</span>`).join('')}</div>
  <div class="c-ic">${t?`<a class="ib2" href="${t}" title="${esc(l.phone)}" aria-label="חיוג">${ic('phone')}</a>`:''}${w?`<a class="ib2 wa" href="${w}" target="_blank" rel="noopener" title="${esc(l.wa)}" aria-label="וואצאפ">${ic('wa')}</a>`:''}${l.email?`<a class="ib2 ml" href="mailto:${esc(l.email)}" title="${esc(l.email)}" aria-label="מייל">${ic('mail')}</a>`:''}</div></article>`}
 /* ---------- render ---------- */
@@ -930,6 +933,7 @@ function listBox(kind,title,desc){const arr=S()[kind];
 function renderSettings(){
  const H=DB.history;
  $('#p-settings').innerHTML=`<div class="ptitle"><h1>הגדרות</h1>${undoBtns()}</div><div class="cols2">
+ <div class="sbox"><h3>תצוגת רשימה</h3><p>מציג את הרישום האחרון ביומן בכל ליד ברשימה. ההגדרה נשמרת בדפדפן הזה.</p><label class="tg-row"><input type="checkbox" id="jviewTg" ${JVIEW.get()?'checked':''}> הצגת היומן</label></div>
  ${accountBox()}
  ${listBox('heats','כמה רציני','הערכים והצבעים שמופיעים בכרטיסים. לבן = ללא צבע. המספר = כמה לידים משתמשים בערך. הסדר קובע את המיון.')}
  ${listBox('stages','שלבים','שלבי הטיפול בליד. הסדר = מהמוקדם למתקדם.')}
@@ -966,6 +970,7 @@ function menuAct(m){
  if(m==='bak')download('גיבוי-לידים-'+today()+'.json',JSON.stringify(DB),'application/json');
  if(m==='imp')$('#fileImp').click();
  if(m==='reset')showDlg('זה ימחק את כל השינויים (כולל משימות, הגדרות והיסטוריה) ויחזיר את הנתונים כפי שהיו באקסל. להמשיך?',[['כן, טען מחדש','danger',()=>{DB=seedDB();save(true);clearAll();toast('הנתונים נטענו מחדש')}],['ביטול','',()=>{}]])}
+$('#p-settings').addEventListener('change',e=>{if(e.target.id==='jviewTg'){JVIEW.set(e.target.checked);renderList()}});
 $('#fileImp').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);if(!Array.isArray(o.leads))throw 0;showDlg('לשחזר '+o.leads.length+' לידים? הנתונים הנוכחיים יוחלפו – גם בשרת.',[['שחזר','pri',()=>{DB=o;DB.tasks=DB.tasks||[];DB.history=[];DB.hp=0;DB.settings=Object.assign(DEF(),DB.settings||{});migrate();save(true);render();toast('שוחזר בהצלחה')}],['ביטול','',()=>{}]])}catch(x){showDlg('קובץ לא תקין',[['סגור','',()=>{}]])}};r.readAsText(f);e.target.value=''};
 function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
 function exportCSV(arr,name){
