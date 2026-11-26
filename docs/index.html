@@ -546,15 +546,20 @@ function match(l,skip){
 const facet=(g,v)=>DB.leads.reduce((n,l)=>n+(match(l,g.k)&&g.get(l).includes(v)?1:0),0);
 const activeCount=()=>GROUPS.reduce((n,g)=>n+F[g.k].size,0);
 const lw=s=>(String(s||"").replace(/\([^)]*\)/g," ").trim().split(/\s+/).pop()||"");
+/* sort: the chosen sort is primary; the previously chosen sort (if different) breaks ties */
+let sortCur='newest',sortPrev=null;
 function sorted(arr){
- const m=$('#sort').value,c=(a,b)=>String(a).localeCompare(String(b),'he');
- const f={heat:(a,b)=>heatRank(a.heat)-heatRank(b.heat)||stageRank(b.stage)-stageRank(a.stage)||c(a.name,b.name),
-  stage:(a,b)=>stageRank(b.stage)-stageRank(a.stage)||heatRank(a.heat)-heatRank(b.heat),
-  task:(a,b)=>((nextTask(a.id)||{}).date||'9999').localeCompare((nextTask(b.id)||{}).date||'9999')||heatRank(a.heat)-heatRank(b.heat),
-  updated:(a,b)=>String(b.updated||'').localeCompare(String(a.updated||''))||heatRank(a.heat)-heatRank(b.heat),
-  newest:(a,b)=>String(b.created||'').localeCompare(String(a.created||''))||heatRank(a.heat)-heatRank(b.heat)||c(a.name,b.name),
-  name:(a,b)=>c(a.name,b.name),surname:(a,b)=>(lw(a.name)||"").localeCompare(lw(b.name)||"",'he')||c(a.name,b.name),city:(a,b)=>c(a.city||'תתת',b.city||'תתת')||heatRank(a.heat)-heatRank(b.heat)}[m];
- return arr.sort(f)}
+ const m=$('#sort').value,p=(sortPrev&&sortPrev!==m)?sortPrev:null,c=(a,b)=>String(a).localeCompare(String(b),'he');
+ const K={heat:(a,b)=>heatRank(a.heat)-heatRank(b.heat),
+  stage:(a,b)=>stageRank(b.stage)-stageRank(a.stage),
+  task:(a,b)=>((nextTask(a.id)||{}).date||'9999').localeCompare((nextTask(b.id)||{}).date||'9999'),
+  updated:(a,b)=>String(b.updated||'').localeCompare(String(a.updated||'')),
+  newest:(a,b)=>String(b.created||'').localeCompare(String(a.created||'')),
+  name:(a,b)=>c(a.name,b.name),
+  surname:(a,b)=>(lw(a.name)||'').localeCompare(lw(b.name)||'','he')||c(a.name,b.name),
+  city:(a,b)=>c(a.city||'תתת',b.city||'תתת')};
+ const fb=(a,b)=>heatRank(a.heat)-heatRank(b.heat)||stageRank(b.stage)-stageRank(a.stage)||c(a.name,b.name);
+ return arr.sort((a,b)=>K[m](a,b)||(p?K[p](a,b):0)||fb(a,b))}
 function describeFilters(){const p=[];if(F.q.trim())p.push('חיפוש: '+F.q.trim());GROUPS.forEach(g=>{if(F[g.k].size)p.push(g.label+': '+[...F[g.k]].join(', '))});return p.join(' · ')}
 /* ---------- URL state ---------- */
 let ignoreHashUntil=0;
@@ -566,7 +571,7 @@ function applyHash(){
  const raw=location.hash.replace(/^#\/?/,''),[p,qs]=raw.split('?');
  Object.keys(F).forEach(k=>{if(F[k] instanceof Set)F[k].clear()});F.q='';let so='newest';
  if(qs){const u=new URLSearchParams(qs);F.q=u.get('q')||'';GROUPS.forEach(g=>{const v=u.get(g.k);if(v)v.split('|').forEach(x=>F[g.k].add(x))});so=u.get('sort')||'newest'}
- $('#q').value=F.q;$('#sort').value=$('#sort').querySelector(`option[value="${so}"]`)?so:'newest';
+ $('#q').value=F.q;$('#sort').value=$('#sort').querySelector(`option[value="${so}"]`)?so:'newest';sortCur=$('#sort').value;sortPrev=null;
  showPage(PAGES.includes(p)?p:'leads')}
 function showPage(p){page=p;$$('.page').forEach(e=>e.classList.toggle('on',e.id==='p-'+p));buildNav();$('#fab').hidden=p!=='leads'}
 function nav(p,push){
@@ -623,7 +628,7 @@ const NAV=[['leads','users','לידים'],['tasks','tasks','משימות'],['sta
 function buildNav(){const h=NAV.map(([k,i,t])=>`<button data-nav="${k}" class="${page===k?'on':''}">${ic(i)}<span>${t}</span>${k==='tasks'?'<span class="bdg" hidden></span>':''}</button>`).join('');$('#railNav').innerHTML=h;$('#bnav').innerHTML=h;renderBadge()}
 function goHome(){
  if(cur){hideVisual();const c=cur;cur=null;if(c.pushed){ignorePop++;ignoreHashUntil=Date.now()+1500;try{history.back()}catch(e){ignorePop--}}onClosed(c)}
- Object.keys(F).forEach(k=>{if(F[k] instanceof Set)F[k].clear()});F.q='';$('#q').value='';$('#sort').value='newest';
+ Object.keys(F).forEach(k=>{if(F[k] instanceof Set)F[k].clear()});F.q='';$('#q').value='';$('#sort').value='newest';sortCur='newest';sortPrev=null;
  nav('leads',true);window.scrollTo(0,0)}
 document.addEventListener('click',e=>{if(e.target.closest('[data-home]'))goHome()});
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('[data-home]')){e.preventDefault();goHome()}});
@@ -682,7 +687,7 @@ $('#btnFilter').onclick=()=>{openSheet('shFilter','filter');renderPanels()};
 $('#fApply').onclick=closeSheet;
 $('#q').oninput=e=>{F.q=e.target.value;render()};
 $('#qclr').onclick=()=>{$('#q').value='';F.q='';render();$('#q').focus()};
-$('#sort').onchange=()=>{renderList();syncURL()};
+$('#sort').onchange=()=>{const v=$('#sort').value;if(v!==sortCur){sortPrev=sortCur;sortCur=v}renderList();syncURL()};
 $('#btnPdf').onclick=()=>exportListPDF();
 /* ---------- lead drawer (draft model: Save / Cancel) ---------- */
 function openLead(id){const l=byId(id);if(!l)return;histAll=false;curLead=l;draft=JSON.parse(jstr(l));snapStr=jstr(draft);renderLead();openSheet('shLead','lead');$('#dBody').scrollTop=0}
